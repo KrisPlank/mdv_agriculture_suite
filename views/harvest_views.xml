@@ -14,9 +14,11 @@
                 <field name="crop_id"/>
                 <field name="field_id"/>
                 <field name="season_id" optional="hide"/>
+                <field name="mdv_agri_imperial_units" column_invisible="1"/>
                 <field name="quantity" sum="Total"/>
                 <field name="uom_id"/>
-                <field name="yield_per_ha" optional="show"/>
+                <field name="yield_per_ha" optional="show" invisible="mdv_agri_imperial_units"/>
+                <field name="yield_per_acre" string="Yield per acre" optional="show" invisible="not mdv_agri_imperial_units"/>
                 <field name="grade_id"/>
                 <field name="moisture_pct" optional="hide"/>
                 <field name="lot_id" optional="show"/>
@@ -55,13 +57,16 @@
                             <field name="field_id"/>
                             <field name="season_id"/>
                             <field name="product_id" readonly="state != 'draft'"/>
+                            <field name="mdv_agri_imperial_units" invisible="1"/>
                             <label for="quantity"/>
                             <div class="o_row">
                                 <field name="quantity" readonly="state != 'draft'"/>
                                 <field name="uom_id"/>
                             </div>
-                            <field name="area_harvested_ha" readonly="state != 'draft'"/>
-                            <field name="yield_per_ha"/>
+                            <field name="area_harvested_ha" readonly="state != 'draft'" invisible="mdv_agri_imperial_units"/>
+                            <field name="area_harvested_acre" readonly="state != 'draft'" invisible="not mdv_agri_imperial_units"/>
+                            <field name="yield_per_ha" invisible="mdv_agri_imperial_units"/>
+                            <field name="yield_per_acre" string="Yield per acre" invisible="not mdv_agri_imperial_units"/>
                         </group>
                         <group>
                             <field name="date" readonly="state != 'draft'"/>

@@ -85,7 +85,9 @@
                             <field name="date_planned" readonly="state != 'planned'"/>
                             <field name="date_done" readonly="state != 'planned'"/>
                             <field name="user_id" widget="many2one_avatar_user"/>
-                            <field name="water_m3" invisible="activity_type != 'irrigation'" readonly="state != 'planned'"/>
+                            <field name="mdv_agri_imperial_units" invisible="1"/>
+                            <field name="water_m3" invisible="activity_type != 'irrigation' or mdv_agri_imperial_units" readonly="state != 'planned'"/>
+                            <field name="water_us_gal" string="Water (US gal)" invisible="activity_type != 'irrigation' or not mdv_agri_imperial_units" readonly="state != 'planned'"/>
                             <field name="weather_log_id" invisible="not weather_log_id"/>
                             <field name="total_cost"/>
                             <field name="move_ids" invisible="1"/>
@@ -100,7 +102,9 @@
                                     <field name="product_id"/>
                                     <field name="quantity"/>
                                     <field name="uom_id"/>
-                                    <field name="rate_per_ha"/>
+                                    <field name="mdv_agri_imperial_units" column_invisible="1"/>
+                                    <field name="rate_per_ha" invisible="mdv_agri_imperial_units"/>
+                                    <field name="rate_per_acre" string="Rate per acre" invisible="not mdv_agri_imperial_units"/>
                                     <field name="unit_cost"/>
                                 </list>
                             </field>

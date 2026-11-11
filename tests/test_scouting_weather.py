@@ -92,6 +92,26 @@ class TestScouting(AgriCommon):
         self.assertAlmostEqual(scout.temp_max_c, 24.5)
         self.assertAlmostEqual(scout.precipitation_mm, 3.0)
 
+    def test_imperial_weather_conversions_are_editable(self):
+        self.company.mdv_agri_imperial_units = True
+        scout = self._scout(affected_area_ha=2.0)
+        self.assertAlmostEqual(scout.affected_area_acre, 2.0 * 2.4710538, places=4)
+        scout.affected_area_acre = 1.0
+        self.assertAlmostEqual(scout.affected_area_ha, 1.0 / 2.4710538, places=4)
+        log = self.env['mdv.agri.weather.log'].create({
+            'farm_id': self.farm.id, 'date': self.today, 'temp_max_c': 0.0, 'precipitation_mm': 25.4,
+            'wind_max_kmh': 16.09344,
+        })
+        self.assertAlmostEqual(log.temp_max_f, 32.0)
+        self.assertAlmostEqual(log.precipitation_in, 1.0)
+        self.assertAlmostEqual(log.wind_max_mph, 10.0, places=3)
+        log.temp_max_f = 50.0
+        log.precipitation_in = 2.0
+        log.wind_max_mph = 20.0
+        self.assertAlmostEqual(log.temp_max_c, 10.0)
+        self.assertAlmostEqual(log.precipitation_mm, 50.8)
+        self.assertAlmostEqual(log.wind_max_kmh, 32.18688, places=3)
+
 
 @tagged('post_install', '-at_install')
 class TestWeather(AgriCommon):
@@ -149,6 +169,15 @@ class TestWeather(AgriCommon):
         self.company.mdv_agri_heavy_rain_mm = 50.0
         logs, _m = self._fetch(open_meteo_payload(self.today, [5.0], [14.0], [40.0]))
         self.assertFalse(logs.heavy_rain_alert)
+
+    def test_imperial_settings_convert_alert_thresholds(self):
+        settings = self.env['res.config.settings'].create({'company_id': self.company.id})
+        settings.mdv_agri_imperial_units = True
+        self.assertTrue(self.company.mdv_agri_imperial_units)
+        settings.mdv_agri_frost_f = 32.0
+        self.assertAlmostEqual(self.company.mdv_agri_frost_c, 0.0)
+        settings.mdv_agri_heavy_rain_in = 1.0
+        self.assertAlmostEqual(self.company.mdv_agri_heavy_rain_mm, 25.4)
 
     def test_missing_coordinates(self):
         self.farm.write({'latitude': 0.0, 'longitude': 0.0})

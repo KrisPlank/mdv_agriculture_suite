@@ -15,6 +15,7 @@ class AgriDashboard(models.AbstractModel):
         today = fields.Date.context_today(self)
         week = today - timedelta(days=6)
         currency = env.company.currency_id
+        imperial = env.company.mdv_agri_imperial_units
         Plan = env['mdv.agri.crop.plan']
         plans = Plan.search([('company_id', 'in', company_ids), ('state', 'in', ('confirmed', 'growing'))])
         season_plans = Plan.search([('company_id', 'in', company_ids), ('state', '!=', 'cancelled'),
@@ -47,12 +48,16 @@ class AgriDashboard(models.AbstractModel):
             row['budget'] += plan.budget_total
             row['actual'] += plan.direct_cost
             row['harvested'] += plan.harvested_qty
+        if imperial:
+            for row in by_crop.values():
+                row['area'] *= 2.4710538
         severity_order = {'critical': 0, 'high': 1, 'medium': 2, 'low': 3}
         return {
+            'imperial_units': imperial,
             'currency': {'symbol': currency.symbol, 'position': currency.position},
             'kpi': {
                 'farms': env['mdv.agri.farm'].search_count([('company_id', 'in', company_ids)]),
-                'area_planted': round(sum(plans.mapped('area_ha')), 2),
+                'area_planted': round(sum(plans.mapped('area_ha')) * (2.4710538 if imperial else 1), 2),
                 'active_plans': len(plans),
                 'season_budget': round(sum(season_plans.mapped('budget_total')), 2),
                 'season_actual': round(sum(season_plans.mapped('direct_cost')), 2),
@@ -61,7 +66,7 @@ class AgriDashboard(models.AbstractModel):
                 'open_scouting': len(scouting),
                 'critical_scouting': len(scouting.filtered(lambda s: s.severity in ('high', 'critical'))),
                 'animals': sum(herds.mapped('current_count')),
-                'milk_7d': round(sum(milk.mapped('quantity_l')), 1),
+                'milk_7d': round(sum(milk.mapped('quantity_l')) * (0.264172052 if imperial else 1), 2),
                 'eggs_7d': sum(eggs.mapped('eggs_collected')),
                 'vet_due': due_vet,
                 'requests': requests,

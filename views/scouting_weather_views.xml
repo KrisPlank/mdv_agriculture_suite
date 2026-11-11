@@ -14,7 +14,9 @@
                 <field name="pest_type" optional="show"/>
                 <field name="severity" widget="badge" decoration-danger="severity in ('high', 'critical')" decoration-warning="severity == 'medium'" decoration-success="severity == 'low'"/>
                 <field name="incidence_pct" optional="show"/>
-                <field name="affected_area_ha" optional="show"/>
+                <field name="mdv_agri_imperial_units" column_invisible="1"/>
+                <field name="affected_area_ha" optional="show" invisible="mdv_agri_imperial_units"/>
+                <field name="affected_area_acre" string="Affected Area (acres)" optional="show" invisible="not mdv_agri_imperial_units"/>
                 <field name="scout_id" widget="many2one_avatar_user" optional="show"/>
                 <field name="state" widget="badge"/>
             </list>
@@ -72,7 +74,9 @@
                             <field name="pest_type"/>
                             <field name="severity"/>
                             <field name="incidence_pct"/>
-                            <field name="affected_area_ha"/>
+                            <field name="mdv_agri_imperial_units" invisible="1"/>
+                            <field name="affected_area_ha" invisible="mdv_agri_imperial_units"/>
+                            <field name="affected_area_acre" invisible="not mdv_agri_imperial_units"/>
                             <field name="latitude" invisible="not latitude and not longitude"/>
                             <field name="longitude" invisible="not latitude and not longitude"/>
                             <field name="spray_activity_id" invisible="not spray_activity_id"/>
@@ -82,11 +86,14 @@
                     <group string="Weather that day" invisible="not weather_log_id">
                         <group>
                             <field name="weather_log_id" invisible="1"/>
-                            <field name="temp_max_c"/>
-                            <field name="precipitation_mm"/>
+                            <field name="temp_max_c" invisible="mdv_agri_imperial_units"/>
+                            <field name="temp_max_f" string="Max Temp (F)" invisible="not mdv_agri_imperial_units"/>
+                            <field name="precipitation_mm" invisible="mdv_agri_imperial_units"/>
+                            <field name="precipitation_in" string="Rain (in)" invisible="not mdv_agri_imperial_units"/>
                         </group>
                         <group>
-                            <field name="wind_max_kmh"/>
+                            <field name="wind_max_kmh" invisible="mdv_agri_imperial_units"/>
+                            <field name="wind_max_mph" string="Wind (mph)" invisible="not mdv_agri_imperial_units"/>
                         </group>
                     </group>
                     <notebook>
@@ -116,7 +123,9 @@
                             <field name="treatment_line_ids" readonly="state != 'draft'">
                                 <list editable="bottom">
                                     <field name="product_id"/>
-                                    <field name="rate_per_ha"/>
+                                    <field name="mdv_agri_imperial_units" column_invisible="1"/>
+                                    <field name="rate_per_ha" invisible="mdv_agri_imperial_units"/>
+                                    <field name="rate_per_acre" string="Rate per acre" invisible="not mdv_agri_imperial_units"/>
                                     <field name="quantity"/>
                                     <field name="uom_id"/>
                                 </list>
@@ -177,19 +186,28 @@
         <field name="model">mdv.agri.weather.log</field>
         <field name="arch" type="xml">
             <list editable="top" decoration-info="is_forecast" decoration-danger="has_alert">
+                <field name="mdv_agri_imperial_units" column_invisible="1"/>
                 <field name="farm_id"/>
                 <field name="date"/>
                 <field name="is_forecast" optional="show"/>
                 <field name="condition" optional="show"/>
-                <field name="temp_min_c"/>
-                <field name="temp_max_c"/>
-                <field name="temp_mean_c" optional="hide"/>
-                <field name="precipitation_mm" sum="Total"/>
+                <field name="temp_min_c" invisible="mdv_agri_imperial_units"/>
+                <field name="temp_min_f" string="Min Temp (F)" invisible="not mdv_agri_imperial_units"/>
+                <field name="temp_max_c" invisible="mdv_agri_imperial_units"/>
+                <field name="temp_max_f" string="Max Temp (F)" invisible="not mdv_agri_imperial_units"/>
+                <field name="temp_mean_c" optional="hide" invisible="mdv_agri_imperial_units"/>
+                <field name="temp_mean_f" string="Mean Temp (F)" optional="hide" invisible="not mdv_agri_imperial_units"/>
+                <field name="precipitation_mm" sum="Total" invisible="mdv_agri_imperial_units"/>
+                <field name="precipitation_in" string="Precipitation (in)" sum="Total" invisible="not mdv_agri_imperial_units"/>
                 <field name="humidity_pct" optional="show"/>
-                <field name="wind_max_kmh" optional="show"/>
-                <field name="wind_gust_kmh" optional="hide"/>
-                <field name="et0_mm" optional="show" sum="Total"/>
-                <field name="gdd" optional="show" sum="Total"/>
+                <field name="wind_max_kmh" optional="show" invisible="mdv_agri_imperial_units"/>
+                <field name="wind_max_mph" string="Max Wind (mph)" optional="show" invisible="not mdv_agri_imperial_units"/>
+                <field name="wind_gust_kmh" optional="hide" invisible="mdv_agri_imperial_units"/>
+                <field name="wind_gust_mph" string="Gusts (mph)" optional="hide" invisible="not mdv_agri_imperial_units"/>
+                <field name="et0_mm" optional="show" sum="Total" invisible="mdv_agri_imperial_units"/>
+                <field name="et0_in" string="ET0 (in)" optional="show" sum="Total" invisible="not mdv_agri_imperial_units"/>
+                <field name="gdd" optional="show" sum="Total" invisible="mdv_agri_imperial_units"/>
+                <field name="gdd_f" string="Growing Degree Days (F-days)" optional="show" sum="Total" invisible="not mdv_agri_imperial_units"/>
                 <field name="alert_summary"/>
                 <field name="has_alert" column_invisible="1"/>
                 <field name="source" optional="hide"/>

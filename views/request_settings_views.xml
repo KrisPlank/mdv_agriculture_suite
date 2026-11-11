@@ -13,7 +13,9 @@
                 <field name="crop_id"/>
                 <field name="quantity"/>
                 <field name="uom_id"/>
-                <field name="area_ha" optional="show"/>
+                <field name="mdv_agri_imperial_units" column_invisible="1"/>
+                <field name="area_ha" optional="show" invisible="mdv_agri_imperial_units"/>
+                <field name="area_acre" string="Area (acres)" optional="show" invisible="not mdv_agri_imperial_units"/>
                 <field name="desired_date" optional="show"/>
                 <field name="source" optional="show"/>
                 <field name="user_id" widget="many2one_avatar_user" optional="show"/>
@@ -27,6 +29,7 @@
         <field name="model">mdv.agri.crop.request</field>
         <field name="arch" type="xml">
             <kanban default_group_by="state">
+                <field name="mdv_agri_imperial_units"/>
                 <templates>
                     <t t-name="card">
                         <div class="d-flex">
@@ -35,7 +38,7 @@
                         </div>
                         <field name="partner_id"/>
                         <div class="text-muted small"><field name="request_type"/></div>
-                        <div><field name="quantity"/> <field name="uom_id"/> <span invisible="not area_ha">- <field name="area_ha"/> ha</span></div>
+                        <div><field name="quantity"/> <field name="uom_id"/> <span invisible="not area_ha or mdv_agri_imperial_units">- <field name="area_ha"/></span><span invisible="not area_ha or not mdv_agri_imperial_units">- <field name="area_acre"/></span></div>
                     </t>
                 </templates>
             </kanban>
@@ -70,12 +73,14 @@
                             <field name="request_type"/>
                             <field name="crop_id"/>
                             <field name="variety_id"/>
+                            <field name="mdv_agri_imperial_units" invisible="1"/>
                             <label for="quantity"/>
                             <div class="o_row">
                                 <field name="quantity"/>
                                 <field name="uom_id"/>
                             </div>
-                            <field name="area_ha"/>
+                            <field name="area_ha" invisible="mdv_agri_imperial_units"/>
+                            <field name="area_acre" invisible="not mdv_agri_imperial_units"/>
                         </group>
                         <group>
                             <field name="desired_date"/>
@@ -187,6 +192,11 @@
         <field name="arch" type="xml">
             <xpath expr="//form" position="inside">
                 <app data-string="Agriculture" string="Agriculture" name="mdv_agriculture_suite" groups="mdv_agriculture_suite.group_agri_manager">
+                    <block title="Units" name="agri_units">
+                        <setting string="Imperial units" help="Show US customary units in place of metric measurements.">
+                            <field name="mdv_agri_imperial_units"/>
+                        </setting>
+                    </block>
                     <block title="Weather" name="agri_weather">
                         <setting string="Daily weather from Open-Meteo" help="Fills each farm's weather log every day from its latitude and longitude. No API key.">
                             <field name="mdv_agri_weather_auto"/>
@@ -196,11 +206,11 @@
                             </div>
                         </setting>
                         <setting string="Alert thresholds" help="An alert is posted on the farm and a warning activity is given to the farm manager.">
-                            <div class="row"><label for="mdv_agri_frost_c" class="col-6"/><field name="mdv_agri_frost_c" class="col-4"/></div>
-                            <div class="row"><label for="mdv_agri_heavy_rain_mm" class="col-6"/><field name="mdv_agri_heavy_rain_mm" class="col-4"/></div>
-                            <div class="row"><label for="mdv_agri_heat_c" class="col-6"/><field name="mdv_agri_heat_c" class="col-4"/></div>
-                            <div class="row"><label for="mdv_agri_wind_kmh" class="col-6"/><field name="mdv_agri_wind_kmh" class="col-4"/></div>
-                            <div class="row"><label for="mdv_agri_gdd_base_c" class="col-6"/><field name="mdv_agri_gdd_base_c" class="col-4"/></div>
+                            <div class="row"><label for="mdv_agri_frost_c" class="col-6" invisible="mdv_agri_imperial_units"/><field name="mdv_agri_frost_c" class="col-4" invisible="mdv_agri_imperial_units"/><label for="mdv_agri_frost_f" class="col-6" invisible="not mdv_agri_imperial_units"/><field name="mdv_agri_frost_f" class="col-4" invisible="not mdv_agri_imperial_units"/></div>
+                            <div class="row"><label for="mdv_agri_heavy_rain_mm" class="col-6" invisible="mdv_agri_imperial_units"/><field name="mdv_agri_heavy_rain_mm" class="col-4" invisible="mdv_agri_imperial_units"/><label for="mdv_agri_heavy_rain_in" class="col-6" invisible="not mdv_agri_imperial_units"/><field name="mdv_agri_heavy_rain_in" class="col-4" invisible="not mdv_agri_imperial_units"/></div>
+                            <div class="row"><label for="mdv_agri_heat_c" class="col-6" invisible="mdv_agri_imperial_units"/><field name="mdv_agri_heat_c" class="col-4" invisible="mdv_agri_imperial_units"/><label for="mdv_agri_heat_f" class="col-6" invisible="not mdv_agri_imperial_units"/><field name="mdv_agri_heat_f" class="col-4" invisible="not mdv_agri_imperial_units"/></div>
+                            <div class="row"><label for="mdv_agri_wind_kmh" class="col-6" invisible="mdv_agri_imperial_units"/><field name="mdv_agri_wind_kmh" class="col-4" invisible="mdv_agri_imperial_units"/><label for="mdv_agri_wind_mph" class="col-6" invisible="not mdv_agri_imperial_units"/><field name="mdv_agri_wind_mph" class="col-4" invisible="not mdv_agri_imperial_units"/></div>
+                            <div class="row"><label for="mdv_agri_gdd_base_c" class="col-6" invisible="mdv_agri_imperial_units"/><field name="mdv_agri_gdd_base_c" class="col-4" invisible="mdv_agri_imperial_units"/><label for="mdv_agri_gdd_base_f" class="col-6" invisible="not mdv_agri_imperial_units"/><field name="mdv_agri_gdd_base_f" class="col-4" invisible="not mdv_agri_imperial_units"/></div>
                         </setting>
                     </block>
                     <block title="Costing and Stock" name="agri_costing">

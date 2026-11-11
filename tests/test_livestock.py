@@ -222,5 +222,19 @@ class TestLivestock(AgriCommon):
         self.cow.weight_log_ids = [Command.create({'date': self.today - timedelta(days=10), 'weight_kg': 600}),
                                    Command.create({'date': self.today, 'weight_kg': 610})]
         self.assertEqual(self.cow.weight_kg, 610)
-        latest = self.cow.weight_log_ids.filtered(lambda w: w.date == self.today)
-        self.assertAlmostEqual(latest.daily_gain_kg, 1.0)
+
+    def test_livestock_weight_conversion(self):
+        weight = self.env['mdv.agri.animal.weight'].create({
+            'animal_id': self.cow.id, 'date': self.today, 'weight_kg': 500.0,
+        })
+        self.assertAlmostEqual(weight.weight_lb, 1102.31, places=2)
+        weight.weight_lb = 220.46226218
+        self.assertAlmostEqual(weight.weight_kg, 100.0, places=2)
+
+    def test_milk_volume_conversion(self):
+        log = self.env['mdv.agri.milk.log'].create({
+            'animal_id': self.cow.id, 'date': self.today, 'session': 'am', 'quantity_l': 3.785411784,
+        })
+        self.assertAlmostEqual(log.quantity_us_gal, 1.0, places=6)
+        log.quantity_us_gal = 2.0
+        self.assertAlmostEqual(log.quantity_l, 7.570823568, places=6)

@@ -5,7 +5,7 @@ from odoo.exceptions import UserError, ValidationError
 class AgriHarvest(models.Model):
     _name = 'mdv.agri.harvest'
     _description = 'Harvest'
-    _inherit = ['mail.thread', 'mail.activity.mixin', 'mdv.agri.stock.mixin']
+    _inherit = ['mail.thread', 'mail.activity.mixin', 'mdv.agri.stock.mixin', 'mdv.agri.unit.mixin']
     _order = 'date desc, id desc'
     _check_company_auto = True
 
@@ -27,7 +27,9 @@ class AgriHarvest(models.Model):
     grade_id = fields.Many2one('mdv.agri.quality.grade', 'Quality Grade', tracking=True)
     moisture_pct = fields.Float('Moisture (%)', digits=(5, 2))
     area_harvested_ha = fields.Float('Area Harvested (ha)', digits=(16, 2))
+    area_harvested_acre = fields.Float('Area Harvested (acres)', compute='_compute_area_harvested_acre', inverse='_inverse_area_harvested_acre', digits=(16, 2))
     yield_per_ha = fields.Float(compute='_compute_yield_per_ha', store=True, digits=(16, 2), aggregator='avg')
+    yield_per_acre = fields.Float('Yield per acre', compute='_compute_yield_per_acre', digits=(16, 2), aggregator='avg')
     lot_name = fields.Char('Lot Number', copy=False, help='Leave empty to number the lot automatically.')
     lot_id = fields.Many2one('stock.lot', 'Lot', copy=False, readonly=True)
     location_dest_id = fields.Many2one('stock.location', 'Store In', compute='_compute_location_dest_id',
@@ -38,6 +40,15 @@ class AgriHarvest(models.Model):
     available_qty = fields.Float('Unsold', compute='_compute_sold_qty', digits=(16, 2))
     user_id = fields.Many2one('res.users', 'Recorded By', default=lambda self: self.env.user)
     notes = fields.Text()
+
+    @api.depends('area_harvested_ha')
+    def _compute_area_harvested_acre(self):
+        for harvest in self:
+            harvest.area_harvested_acre = harvest.area_harvested_ha * 2.4710538
+
+    def _inverse_area_harvested_acre(self):
+        for harvest in self:
+            harvest.area_harvested_ha = harvest.area_harvested_acre / 2.4710538
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -64,6 +75,11 @@ class AgriHarvest(models.Model):
         for harvest in self:
             area = harvest.area_harvested_ha or harvest.plan_id.area_ha
             harvest.yield_per_ha = harvest.quantity / area if area else 0.0
+
+    @api.depends('yield_per_ha')
+    def _compute_yield_per_acre(self):
+        for harvest in self:
+            harvest.yield_per_acre = harvest.yield_per_ha / 2.4710538
 
     @api.depends('sale_line_ids.product_uom_qty', 'sale_line_ids.state', 'quantity')
     def _compute_sold_qty(self):

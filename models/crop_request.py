@@ -5,7 +5,7 @@ from odoo.exceptions import UserError, ValidationError
 class AgriCropRequest(models.Model):
     _name = 'mdv.agri.crop.request'
     _description = 'Crop Request'
-    _inherit = ['portal.mixin', 'mail.thread', 'mail.activity.mixin']
+    _inherit = ['portal.mixin', 'mail.thread', 'mail.activity.mixin', 'mdv.agri.unit.mixin']
     _order = 'create_date desc, id desc'
 
     name = fields.Char(required=True, copy=False, readonly=True, default=lambda self: _('New'))
@@ -26,6 +26,7 @@ class AgriCropRequest(models.Model):
     quantity = fields.Float(digits=(16, 2), tracking=True)
     uom_id = fields.Many2one(related='crop_id.yield_uom_id')
     area_ha = fields.Float('Area (ha)', digits=(16, 2))
+    area_acre = fields.Float('Area (acres)', compute='_compute_area_acre', inverse='_inverse_area_acre', digits=(16, 2))
     desired_date = fields.Date('Wanted By')
     price_unit = fields.Float('Agreed Price per Unit', digits='Product Price', tracking=True)
     land_location = fields.Char('Land Location')
@@ -38,6 +39,15 @@ class AgriCropRequest(models.Model):
     sale_order_id = fields.Many2one('sale.order', 'Quotation', readonly=True, copy=False)
     source = fields.Selection([('backend', 'Back Office'), ('portal', 'Customer Portal'), ('website', 'Website')],
                               default='backend', readonly=True)
+
+    @api.depends('area_ha')
+    def _compute_area_acre(self):
+        for request in self:
+            request.area_acre = request.area_ha * 2.4710538
+
+    def _inverse_area_acre(self):
+        for request in self:
+            request.area_ha = request.area_acre / 2.4710538
 
     @api.model_create_multi
     def create(self, vals_list):

@@ -1,5 +1,6 @@
 from . import res_company
 from . import res_config_settings
+from . import units
 from . import master_data
 from . import cost
 from . import farm

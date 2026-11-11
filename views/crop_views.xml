@@ -10,7 +10,9 @@
                 <field name="category"/>
                 <field name="product_id"/>
                 <field name="growing_days"/>
-                <field name="expected_yield_per_ha"/>
+                <field name="mdv_agri_imperial_units" column_invisible="1"/>
+                <field name="expected_yield_per_ha" invisible="mdv_agri_imperial_units"/>
+                <field name="expected_yield_per_acre" string="Expected Yield per acre" invisible="not mdv_agri_imperial_units"/>
                 <field name="yield_uom_id"/>
             </list>
         </field>
@@ -21,13 +23,14 @@
         <field name="model">mdv.agri.crop</field>
         <field name="arch" type="xml">
             <kanban>
+                <field name="mdv_agri_imperial_units"/>
                 <templates>
                     <t t-name="card" class="flex-row">
                         <field name="image" widget="image" class="me-2" options="{'size': [56, 56]}" invisible="not image"/>
                         <div>
                             <field name="name" class="fw-bold"/>
                             <div class="text-muted"><field name="category"/></div>
-                            <div><field name="growing_days"/> days, <field name="expected_yield_per_ha"/> <field name="yield_uom_id"/>/ha</div>
+                            <div><field name="growing_days"/> days, <field name="expected_yield_per_ha" invisible="mdv_agri_imperial_units"/><field name="expected_yield_per_acre" invisible="not mdv_agri_imperial_units"/> <field name="yield_uom_id"/><span invisible="mdv_agri_imperial_units">/ha</span><span invisible="not mdv_agri_imperial_units">/acre</span></div>
                         </div>
                     </t>
                 </templates>
@@ -41,6 +44,7 @@
         <field name="arch" type="xml">
             <form>
                 <sheet>
+                    <field name="mdv_agri_imperial_units" invisible="1"/>
                     <div class="oe_button_box" name="button_box">
                         <button name="action_open_plans" type="object" class="oe_stat_button" icon="fa-leaf">
                             <field name="plan_count" widget="statinfo" string="Crop Plans"/>
@@ -61,8 +65,10 @@
                         </group>
                         <group>
                             <field name="growing_days"/>
-                            <field name="expected_yield_per_ha"/>
-                            <field name="base_temperature_c"/>
+                            <field name="expected_yield_per_ha" invisible="mdv_agri_imperial_units"/>
+                            <field name="expected_yield_per_acre" string="Expected Yield per acre" invisible="not mdv_agri_imperial_units"/>
+                            <field name="base_temperature_c" invisible="mdv_agri_imperial_units"/>
+                            <field name="base_temperature_f" string="GDD Base (F)" invisible="not mdv_agri_imperial_units"/>
                             <field name="season_ids" widget="many2many_tags"/>
                         </group>
                     </group>
@@ -71,25 +77,32 @@
                             <p class="text-muted">Confirming a crop plan creates these activities (dates from the sowing date) and a budget scaled to the planted area.</p>
                             <field name="template_line_ids">
                                 <list editable="bottom">
+                                    <field name="mdv_agri_imperial_units" column_invisible="1"/>
                                     <field name="sequence" widget="handle"/>
                                     <field name="day_offset"/>
                                     <field name="name"/>
                                     <field name="activity_type"/>
                                     <field name="product_id"/>
-                                    <field name="qty_per_ha"/>
-                                    <field name="labour_hours_per_ha"/>
-                                    <field name="machine_hours_per_ha"/>
+                                    <field name="qty_per_ha" invisible="mdv_agri_imperial_units"/>
+                                    <field name="qty_per_acre" string="Material per acre" invisible="not mdv_agri_imperial_units"/>
+                                    <field name="labour_hours_per_ha" invisible="mdv_agri_imperial_units"/>
+                                    <field name="labour_hours_per_acre" string="Labour h per acre" invisible="not mdv_agri_imperial_units"/>
+                                    <field name="machine_hours_per_ha" invisible="mdv_agri_imperial_units"/>
+                                    <field name="machine_hours_per_acre" string="Machine h per acre" invisible="not mdv_agri_imperial_units"/>
                                 </list>
                             </field>
                         </page>
                         <page string="Varieties" name="varieties">
                             <field name="variety_ids">
                                 <list editable="bottom">
+                                    <field name="mdv_agri_imperial_units" column_invisible="1"/>
                                     <field name="name"/>
                                     <field name="growing_days"/>
-                                    <field name="expected_yield_per_ha"/>
+                                    <field name="expected_yield_per_ha" invisible="mdv_agri_imperial_units"/>
+                                    <field name="expected_yield_per_acre" string="Expected Yield per acre" invisible="not mdv_agri_imperial_units"/>
                                     <field name="seed_product_id"/>
-                                    <field name="seed_rate_per_ha"/>
+                                    <field name="seed_rate_per_ha" invisible="mdv_agri_imperial_units"/>
+                                    <field name="seed_rate_per_acre" string="Seed Rate per acre" invisible="not mdv_agri_imperial_units"/>
                                     <field name="traits"/>
                                 </list>
                             </field>
@@ -121,9 +134,12 @@
                 <field name="crop_id"/>
                 <field name="name"/>
                 <field name="growing_days"/>
-                <field name="expected_yield_per_ha"/>
+                <field name="mdv_agri_imperial_units" column_invisible="1"/>
+                <field name="expected_yield_per_ha" invisible="mdv_agri_imperial_units"/>
+                <field name="expected_yield_per_acre" string="Expected Yield per acre" invisible="not mdv_agri_imperial_units"/>
                 <field name="seed_product_id"/>
-                <field name="seed_rate_per_ha"/>
+                <field name="seed_rate_per_ha" invisible="mdv_agri_imperial_units"/>
+                <field name="seed_rate_per_acre" string="Seed Rate per acre" invisible="not mdv_agri_imperial_units"/>
                 <field name="traits"/>
             </list>
         </field>
@@ -200,7 +216,9 @@
                     <field name="treatment_line_ids">
                         <list editable="bottom">
                             <field name="product_id"/>
-                            <field name="rate_per_ha"/>
+                                <field name="mdv_agri_imperial_units" column_invisible="1"/>
+                                <field name="rate_per_ha" invisible="mdv_agri_imperial_units"/>
+                                <field name="rate_per_acre" string="Rate per acre" invisible="not mdv_agri_imperial_units"/>
                             <field name="uom_id"/>
                             <field name="note"/>
                         </list>

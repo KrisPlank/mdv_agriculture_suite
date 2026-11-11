@@ -55,12 +55,23 @@ class AgriPest(models.Model):
 class AgriPestTreatment(models.Model):
     _name = 'mdv.agri.pest.treatment'
     _description = 'Recommended Treatment Product'
+    _inherit = ['mdv.agri.unit.mixin']
 
     pest_id = fields.Many2one('mdv.agri.pest', required=True, ondelete='cascade')
     product_id = fields.Many2one('product.product', required=True, domain=[('type', '=', 'consu')])
     rate_per_ha = fields.Float('Rate per ha', required=True, default=1.0)
+    rate_per_acre = fields.Float('Rate per acre', compute='_compute_rate_per_acre', inverse='_inverse_rate_per_acre')
     uom_id = fields.Many2one(related='product_id.uom_id')
     note = fields.Char()
+
+    @api.depends('rate_per_ha')
+    def _compute_rate_per_acre(self):
+        for line in self:
+            line.rate_per_acre = line.rate_per_ha / 2.4710538
+
+    def _inverse_rate_per_acre(self):
+        for line in self:
+            line.rate_per_ha = line.rate_per_acre * 2.4710538
 
 
 class AgriAnimalSpecies(models.Model):

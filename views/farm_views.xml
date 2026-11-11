@@ -12,8 +12,11 @@
                 <field name="manager_id" widget="many2one_avatar_user"/>
                 <field name="city" optional="show"/>
                 <field name="country_id" optional="hide"/>
-                <field name="total_area_ha" sum="Total"/>
-                <field name="cultivated_area_ha" sum="Total"/>
+                <field name="mdv_agri_imperial_units" column_invisible="1"/>
+                <field name="total_area_ha" sum="Total" invisible="mdv_agri_imperial_units"/>
+                <field name="total_area_acre" sum="Total" invisible="not mdv_agri_imperial_units"/>
+                <field name="cultivated_area_ha" sum="Total" invisible="mdv_agri_imperial_units"/>
+                <field name="cultivated_area_imperial" string="Area Under Crop (acres)" sum="Total" invisible="not mdv_agri_imperial_units"/>
                 <field name="company_id" groups="base.group_multi_company" optional="show"/>
             </list>
         </field>
@@ -25,6 +28,7 @@
         <field name="arch" type="xml">
             <kanban>
                 <field name="color"/>
+                <field name="mdv_agri_imperial_units"/>
                 <templates>
                     <t t-name="card">
                         <div class="d-flex">
@@ -32,7 +36,7 @@
                             <div>
                                 <field name="name" class="fw-bold fs-5"/>
                                 <div class="text-muted"><field name="farm_type"/> - <field name="city"/></div>
-                                <div><field name="total_area_ha"/> ha total, <field name="cultivated_area_ha"/> ha under crop</div>
+                                <div><field name="total_area_ha" invisible="mdv_agri_imperial_units"/><field name="total_area_acre" invisible="not mdv_agri_imperial_units"/> total, <field name="cultivated_area_ha" invisible="mdv_agri_imperial_units"/><field name="cultivated_area_imperial" invisible="not mdv_agri_imperial_units"/> under crop</div>
                                 <div class="text-muted small"><field name="field_count"/> fields, <field name="herd_count"/> herds</div>
                             </div>
                         </div>
@@ -103,12 +107,14 @@
                         </group>
                     </group>
                     <group string="Area">
+                        <field name="mdv_agri_imperial_units" invisible="1"/>
                         <group>
-                            <field name="total_area_ha"/>
-                            <field name="total_area_acre"/>
+                            <field name="total_area_ha" invisible="mdv_agri_imperial_units"/>
+                            <field name="total_area_acre" invisible="not mdv_agri_imperial_units"/>
                         </group>
                         <group>
-                            <field name="cultivated_area_ha"/>
+                            <field name="cultivated_area_ha" invisible="mdv_agri_imperial_units"/>
+                            <field name="cultivated_area_imperial" string="Area Under Crop (acres)" invisible="not mdv_agri_imperial_units"/>
                             <field name="last_weather_id" invisible="not last_weather_id"/>
                         </group>
                     </group>
@@ -120,8 +126,10 @@
                         <page string="Fields" name="fields">
                             <field name="field_ids" context="{'default_farm_id': id}">
                                 <list>
+                                    <field name="mdv_agri_imperial_units" column_invisible="1"/>
                                     <field name="name"/>
-                                    <field name="area_ha" sum="Total"/>
+                                    <field name="area_ha" sum="Total" invisible="mdv_agri_imperial_units"/>
+                                    <field name="area_acre" sum="Total" invisible="not mdv_agri_imperial_units"/>
                                     <field name="soil_type_id"/>
                                     <field name="irrigation_type"/>
                                     <field name="state" widget="badge" decoration-success="state == 'growing'" decoration-warning="state == 'planned'"/>
@@ -173,7 +181,9 @@
                 <field name="farm_id"/>
                 <field name="name"/>
                 <field name="code" optional="hide"/>
-                <field name="area_ha" sum="Total"/>
+                <field name="mdv_agri_imperial_units" column_invisible="1"/>
+                <field name="area_ha" sum="Total" invisible="mdv_agri_imperial_units"/>
+                <field name="area_acre" sum="Total" invisible="not mdv_agri_imperial_units"/>
                 <field name="soil_type_id" optional="show"/>
                 <field name="soil_ph" optional="show"/>
                 <field name="irrigation_type" optional="show"/>
@@ -189,11 +199,12 @@
         <field name="model">mdv.agri.field</field>
         <field name="arch" type="xml">
             <kanban default_group_by="state">
+                <field name="mdv_agri_imperial_units"/>
                 <templates>
                     <t t-name="card">
                         <field name="name" class="fw-bold"/>
                         <div class="text-muted"><field name="farm_id"/></div>
-                        <div><field name="area_ha"/> ha - <field name="soil_type_id"/></div>
+                        <div><field name="area_ha" invisible="mdv_agri_imperial_units"/><field name="area_acre" invisible="not mdv_agri_imperial_units"/> - <field name="soil_type_id"/></div>
                         <div><field name="current_plan_id"/></div>
                     </t>
                 </templates>
@@ -212,6 +223,7 @@
                     <field name="state" widget="statusbar"/>
                 </header>
                 <sheet>
+                    <field name="mdv_agri_imperial_units" invisible="1"/>
                     <div class="oe_button_box" name="button_box">
                         <button name="action_open_plans" type="object" class="oe_stat_button" icon="fa-leaf" string="Crop Plans"/>
                     </div>
@@ -223,9 +235,10 @@
                         <group>
                             <field name="farm_id"/>
                             <field name="code"/>
-                            <field name="area_ha"/>
-                            <field name="area_acre"/>
-                            <field name="map_area_ha"/>
+                            <field name="area_ha" invisible="mdv_agri_imperial_units"/>
+                            <field name="area_acre" invisible="not mdv_agri_imperial_units"/>
+                            <field name="map_area_ha" invisible="mdv_agri_imperial_units"/>
+                            <field name="map_area_acre" invisible="not mdv_agri_imperial_units"/>
                             <field name="current_plan_id"/>
                         </group>
                         <group>

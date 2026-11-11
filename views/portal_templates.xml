@@ -82,7 +82,7 @@
                             <p><strong>Crop:</strong> <t t-out="crop_request.crop_id.name"/> <t t-if="crop_request.variety_id">(<t t-out="crop_request.variety_id.name"/>)</t></p>
                             <p><strong>Type:</strong> <span t-field="crop_request.request_type"/></p>
                             <p t-if="crop_request.quantity"><strong>Quantity:</strong> <t t-out="crop_request.quantity"/> <t t-out="crop_request.uom_id.name or ''"/></p>
-                            <p t-if="crop_request.area_ha"><strong>Area:</strong> <t t-out="crop_request.area_ha"/> ha</p>
+                            <p t-if="crop_request.area_ha"><strong>Area:</strong> <t t-out="crop_request.area_acre if crop_request.mdv_agri_imperial_units else crop_request.area_ha"/> <t t-out="'acres' if crop_request.mdv_agri_imperial_units else 'ha'"/></p>
                         </div>
                         <div class="col-md-6">
                             <p t-if="crop_request.desired_date"><strong>Wanted by:</strong> <span t-field="crop_request.desired_date"/></p>
@@ -125,7 +125,12 @@
                        t-attf-class="form-control #{'is-invalid' if error.get('quantity') else ''}"/>
                 <div class="form-text">In the crop's unit (for example kg or t)</div>
             </div>
-            <div class="col-md-4 mb-3">
+            <div class="col-md-4 mb-3" t-if="request.env.company.mdv_agri_imperial_units">
+                <label class="form-label" for="area_acre">Or area (acres)</label>
+                <input type="number" step="any" min="0" name="area_acre" id="area_acre" t-att-value="values.get('area_acre')"
+                       t-attf-class="form-control #{'is-invalid' if error.get('area_acre') else ''}"/>
+            </div>
+            <div class="col-md-4 mb-3" t-else="">
                 <label class="form-label" for="area_ha">Or area (ha)</label>
                 <input type="number" step="any" min="0" name="area_ha" id="area_ha" t-att-value="values.get('area_ha')"
                        t-attf-class="form-control #{'is-invalid' if error.get('area_ha') else ''}"/>

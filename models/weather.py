@@ -34,6 +34,7 @@ WMO = {
 class AgriWeatherLog(models.Model):
     _name = 'mdv.agri.weather.log'
     _description = 'Farm Weather Log'
+    _inherit = ['mdv.agri.unit.mixin']
     _order = 'date desc, farm_id'
     _rec_name = 'date'
 
@@ -45,15 +46,24 @@ class AgriWeatherLog(models.Model):
     temp_min_c = fields.Float('Min Temp (C)', digits=(5, 1))
     temp_max_c = fields.Float('Max Temp (C)', digits=(5, 1))
     temp_mean_c = fields.Float('Mean Temp (C)', digits=(5, 1), aggregator='avg')
+    temp_min_f = fields.Float('Min Temp (F)', compute='_compute_temp_f', inverse='_inverse_temp_min_f', digits=(5, 1))
+    temp_max_f = fields.Float('Max Temp (F)', compute='_compute_temp_f', inverse='_inverse_temp_max_f', digits=(5, 1))
+    temp_mean_f = fields.Float('Mean Temp (F)', compute='_compute_temp_f', inverse='_inverse_temp_mean_f', digits=(5, 1))
     precipitation_mm = fields.Float('Precipitation (mm)', digits=(6, 1))
     rain_mm = fields.Float('Rain (mm)', digits=(6, 1))
+    precipitation_in = fields.Float('Precipitation (in)', compute='_compute_precipitation_in', inverse='_inverse_precipitation_in', digits=(6, 2))
+    rain_in = fields.Float('Rain (in)', compute='_compute_precipitation_in', inverse='_inverse_rain_in', digits=(6, 2))
     humidity_pct = fields.Float('Humidity (%)', digits=(5, 1), aggregator='avg')
     wind_max_kmh = fields.Float('Max Wind (km/h)', digits=(6, 1), aggregator='max')
     wind_gust_kmh = fields.Float('Gusts (km/h)', digits=(6, 1), aggregator='max')
+    wind_max_mph = fields.Float('Max Wind (mph)', compute='_compute_wind_mph', inverse='_inverse_wind_max_mph', digits=(6, 1))
+    wind_gust_mph = fields.Float('Gusts (mph)', compute='_compute_wind_mph', inverse='_inverse_wind_gust_mph', digits=(6, 1))
     et0_mm = fields.Float('ET0 (mm)', digits=(6, 2), help='Reference evapotranspiration (FAO-56).')
+    et0_in = fields.Float('ET0 (in)', compute='_compute_et0_in', inverse='_inverse_et0_in', digits=(6, 2))
     weather_code = fields.Integer('WMO Code')
     condition = fields.Char(compute='_compute_condition')
     gdd = fields.Float('Growing Degree Days', compute='_compute_gdd', store=True, digits=(6, 1))
+    gdd_f = fields.Float('Growing Degree Days (F-days)', compute='_compute_gdd_f', digits=(6, 1))
     frost_alert = fields.Boolean(compute='_compute_alerts', store=True)
     heavy_rain_alert = fields.Boolean(compute='_compute_alerts', store=True)
     heat_alert = fields.Boolean(compute='_compute_alerts', store=True)
@@ -64,6 +74,62 @@ class AgriWeatherLog(models.Model):
     notes = fields.Char()
 
     _farm_date_unique = models.Constraint('UNIQUE(farm_id, date)', 'There is already a weather log for this farm and day.')
+
+    @api.depends('temp_min_c', 'temp_max_c', 'temp_mean_c')
+    def _compute_temp_f(self):
+        for log in self:
+            log.temp_min_f = log.temp_min_c * 9 / 5 + 32
+            log.temp_max_f = log.temp_max_c * 9 / 5 + 32
+            log.temp_mean_f = log.temp_mean_c * 9 / 5 + 32
+
+    def _inverse_temp_min_f(self):
+        for log in self:
+            log.temp_min_c = (log.temp_min_f - 32) * 5 / 9
+
+    def _inverse_temp_max_f(self):
+        for log in self:
+            log.temp_max_c = (log.temp_max_f - 32) * 5 / 9
+
+    def _inverse_temp_mean_f(self):
+        for log in self:
+            log.temp_mean_c = (log.temp_mean_f - 32) * 5 / 9
+
+    @api.depends('precipitation_mm', 'rain_mm')
+    def _compute_precipitation_in(self):
+        for log in self:
+            log.precipitation_in = log.precipitation_mm / 25.4
+            log.rain_in = log.rain_mm / 25.4
+
+    def _inverse_precipitation_in(self):
+        for log in self:
+            log.precipitation_mm = log.precipitation_in * 25.4
+
+    def _inverse_rain_in(self):
+        for log in self:
+            log.rain_mm = log.rain_in * 25.4
+
+    @api.depends('wind_max_kmh', 'wind_gust_kmh')
+    def _compute_wind_mph(self):
+        for log in self:
+            log.wind_max_mph = log.wind_max_kmh * 0.6213711922
+            log.wind_gust_mph = log.wind_gust_kmh * 0.6213711922
+
+    def _inverse_wind_max_mph(self):
+        for log in self:
+            log.wind_max_kmh = log.wind_max_mph / 0.6213711922
+
+    def _inverse_wind_gust_mph(self):
+        for log in self:
+            log.wind_gust_kmh = log.wind_gust_mph / 0.6213711922
+
+    @api.depends('et0_mm')
+    def _compute_et0_in(self):
+        for log in self:
+            log.et0_in = log.et0_mm / 25.4
+
+    def _inverse_et0_in(self):
+        for log in self:
+            log.et0_mm = log.et0_in * 25.4
 
     @api.constrains('humidity_pct', 'precipitation_mm')
     def _check_values(self):
@@ -86,7 +152,13 @@ class AgriWeatherLog(models.Model):
         for log in self:
             log.gdd = log._gdd(log.farm_id.company_id.mdv_agri_gdd_base_c or 10.0)
 
-    @api.depends('temp_min_c', 'temp_max_c', 'precipitation_mm', 'wind_max_kmh', 'wind_gust_kmh', 'is_forecast')
+    @api.depends('gdd')
+    def _compute_gdd_f(self):
+        for log in self:
+            log.gdd_f = log.gdd * 9 / 5
+
+    @api.depends('temp_min_c', 'temp_max_c', 'precipitation_mm', 'wind_max_kmh', 'wind_gust_kmh', 'is_forecast',
+                 'farm_id.company_id.mdv_agri_imperial_units')
     def _compute_alerts(self):
         for log in self:
             company = log.farm_id.company_id or self.env.company
@@ -95,14 +167,19 @@ class AgriWeatherLog(models.Model):
             log.heat_alert = log.temp_max_c >= company.mdv_agri_heat_c > 0
             log.wind_alert = max(log.wind_max_kmh, log.wind_gust_kmh) >= company.mdv_agri_wind_kmh > 0
             parts = []
+            imperial = company.mdv_agri_imperial_units
             if log.frost_alert:
-                parts.append(_('Frost %(t)s C', t=log.temp_min_c))
+                temp = log.temp_min_c * 9 / 5 + 32 if imperial else log.temp_min_c
+                parts.append(_('Frost %(t)s %(unit)s', t=temp, unit='F' if imperial else 'C'))
             if log.heavy_rain_alert:
-                parts.append(_('Heavy rain %(mm)s mm', mm=log.precipitation_mm))
+                rain = log.precipitation_mm / 25.4 if imperial else log.precipitation_mm
+                parts.append(_('Heavy rain %(amount)s %(unit)s', amount=rain, unit='in' if imperial else 'mm'))
             if log.heat_alert:
-                parts.append(_('Heat %(t)s C', t=log.temp_max_c))
+                temp = log.temp_max_c * 9 / 5 + 32 if imperial else log.temp_max_c
+                parts.append(_('Heat %(t)s %(unit)s', t=temp, unit='F' if imperial else 'C'))
             if log.wind_alert:
-                parts.append(_('Wind %(w)s km/h', w=max(log.wind_max_kmh, log.wind_gust_kmh)))
+                wind = max(log.wind_max_kmh, log.wind_gust_kmh) * (0.6213711922 if imperial else 1)
+                parts.append(_('Wind %(speed)s %(unit)s', speed=wind, unit='mph' if imperial else 'km/h'))
             log.has_alert = bool(parts)
             log.alert_summary = ', '.join(parts)
 

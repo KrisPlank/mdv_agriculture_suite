@@ -7,6 +7,7 @@ from odoo.exceptions import UserError, ValidationError
 class AgriMilkLog(models.Model):
     _name = 'mdv.agri.milk.log'
     _description = 'Milk Yield'
+    _inherit = ['mdv.agri.unit.mixin']
     _order = 'date desc, session, id desc'
     _check_company_auto = True
 
@@ -20,6 +21,7 @@ class AgriMilkLog(models.Model):
     farm_id = fields.Many2one(related='herd_id.farm_id', store=True)
     company_id = fields.Many2one('res.company', required=True, default=lambda self: self.env.company)
     quantity_l = fields.Float('Milk (L)', required=True, digits=(16, 2))
+    quantity_us_gal = fields.Float('Milk (US gal)', compute='_compute_quantity_us_gal', inverse='_inverse_quantity_us_gal', digits=(16, 2))
     fat_pct = fields.Float('Fat (%)', digits=(5, 2), aggregator='avg')
     protein_pct = fields.Float('Protein (%)', digits=(5, 2), aggregator='avg')
     scc = fields.Integer('SCC (1000/ml)', aggregator='avg', help='Somatic cell count')
@@ -28,6 +30,15 @@ class AgriMilkLog(models.Model):
                                help='Not sent to the tank (withdrawal period, colostrum, quality).')
     posted = fields.Boolean('In Stock', readonly=True, copy=False)
     move_id = fields.Many2one('stock.move', readonly=True, copy=False)
+
+    @api.depends('quantity_l')
+    def _compute_quantity_us_gal(self):
+        for log in self:
+            log.quantity_us_gal = log.quantity_l * 0.264172052
+
+    def _inverse_quantity_us_gal(self):
+        for log in self:
+            log.quantity_l = log.quantity_us_gal / 0.264172052
 
     @api.depends('animal_id')
     def _compute_herd_id(self):

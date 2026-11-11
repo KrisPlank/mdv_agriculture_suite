@@ -7,7 +7,7 @@ from .crop import ACTIVITY_TYPES
 class AgriActivity(models.Model):
     _name = 'mdv.agri.activity'
     _description = 'Field Activity'
-    _inherit = ['mail.thread', 'mail.activity.mixin', 'mdv.agri.stock.mixin']
+    _inherit = ['mail.thread', 'mail.activity.mixin', 'mdv.agri.stock.mixin', 'mdv.agri.unit.mixin']
     _order = 'date_planned, id'
     _check_company_auto = True
 
@@ -30,6 +30,7 @@ class AgriActivity(models.Model):
     planned_labour_hours = fields.Float()
     planned_machine_hours = fields.Float()
     water_m3 = fields.Float('Water (m3)', help='Irrigation water applied.')
+    water_us_gal = fields.Float('Water (US gal)', compute='_compute_water_us_gal', inverse='_inverse_water_us_gal')
     scouting_id = fields.Many2one('mdv.agri.scouting', 'From Scouting', copy=False)
     weather_log_id = fields.Many2one('mdv.agri.weather.log', compute='_compute_weather_log')
     material_line_ids = fields.One2many('mdv.agri.activity.material', 'activity_id', string='Materials', copy=True)
@@ -40,6 +41,15 @@ class AgriActivity(models.Model):
     total_cost = fields.Monetary(compute='_compute_total_cost', currency_field='currency_id')
     notes = fields.Html()
     color = fields.Integer(compute='_compute_color')
+
+    @api.depends('water_m3')
+    def _compute_water_us_gal(self):
+        for activity in self:
+            activity.water_us_gal = activity.water_m3 * 264.172052
+
+    def _inverse_water_us_gal(self):
+        for activity in self:
+            activity.water_m3 = activity.water_us_gal / 264.172052
 
     def _compute_is_overdue(self):
         today = fields.Date.context_today(self)
@@ -148,6 +158,7 @@ class AgriActivityMaterial(models.Model):
     uom_id = fields.Many2one('uom.uom', 'Unit', compute='_compute_uom_id', store=True, readonly=False)
     unit_cost = fields.Float(digits='Product Price', readonly=True)
     rate_per_ha = fields.Float('Rate per ha', compute='_compute_rate', digits=(16, 3))
+    rate_per_acre = fields.Float('Rate per acre', compute='_compute_rate_per_acre', digits=(16, 3))
 
     @api.depends('product_id')
     def _compute_uom_id(self):
@@ -159,6 +170,11 @@ class AgriActivityMaterial(models.Model):
         for line in self:
             area = line.activity_id.plan_id.area_ha
             line.rate_per_ha = line.quantity / area if area else 0.0
+
+    @api.depends('rate_per_ha')
+    def _compute_rate_per_acre(self):
+        for line in self:
+            line.rate_per_acre = line.rate_per_ha / 2.4710538
 
 
 class AgriActivityLabour(models.Model):

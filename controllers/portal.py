@@ -123,7 +123,10 @@ class AgriCropRequestPortal(CustomerPortal):
             return value
 
         quantity = _float('quantity')
-        area = _float('area_ha')
+        if request.env.company.mdv_agri_imperial_units:
+            area = _float('area_acre') / 2.4710538
+        else:
+            area = _float('area_ha')
         if not quantity and not area:
             error['quantity'] = True
         desired = False

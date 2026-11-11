@@ -48,7 +48,7 @@
                             </tr>
                             <tr>
                                 <td><strong>Farm / field:</strong> <span t-field="o.farm_id"/> / <span t-field="o.field_id.name"/></td>
-                                <td><strong>Area:</strong> <span t-field="o.area_ha"/> ha</td>
+                                <td><strong>Area:</strong> <span t-if="not o.mdv_agri_imperial_units" t-field="o.area_ha"/> <span t-if="o.mdv_agri_imperial_units" t-field="o.area_acre"/> <span t-out="'acres' if o.mdv_agri_imperial_units else 'ha'"/></td>
                                 <td><strong>Sowing:</strong> <span t-out="o.actual_sowing_date or o.sowing_date"/></td>
                             </tr>
                         </table>
@@ -80,11 +80,13 @@
                         <h5>Results</h5>
                         <table class="table table-sm">
                             <tr>
-                                <td>Cost per ha</td><td class="text-end"><span t-field="o.cost_per_ha"/></td>
+                                <td t-if="not o.mdv_agri_imperial_units">Cost per ha</td><td t-if="not o.mdv_agri_imperial_units" class="text-end"><span t-field="o.cost_per_ha"/></td>
+                                <td t-if="o.mdv_agri_imperial_units">Cost per acre</td><td t-if="o.mdv_agri_imperial_units" class="text-end"><span t-field="o.cost_per_acre"/></td>
                                 <td>Harvested</td><td class="text-end"><span t-field="o.harvested_qty"/> <span t-field="o.yield_uom_id.name"/></td>
                             </tr>
                             <tr>
-                                <td>Yield per ha</td><td class="text-end"><span t-field="o.yield_per_ha"/> (<span t-out="round(o.yield_gap_pct)"/>% of expected)</td>
+                                <td t-if="not o.mdv_agri_imperial_units">Yield per ha</td><td t-if="not o.mdv_agri_imperial_units" class="text-end"><span t-field="o.yield_per_ha"/> (<span t-out="round(o.yield_gap_pct)"/>% of expected)</td>
+                                <td t-if="o.mdv_agri_imperial_units">Yield per acre</td><td t-if="o.mdv_agri_imperial_units" class="text-end"><span t-field="o.yield_per_acre"/> (<span t-out="round(o.yield_gap_pct)"/>% of expected)</td>
                                 <td>Cost per unit of yield</td><td class="text-end"><span t-field="o.cost_per_unit"/></td>
                             </tr>
                             <tr>
@@ -133,7 +135,7 @@
                             <tr><td><strong>Crop</strong></td><td><span t-field="o.crop_id"/></td><td><strong>Date</strong></td><td><span t-field="o.date"/></td></tr>
                             <tr><td><strong>Farm</strong></td><td><span t-field="o.farm_id"/></td><td><strong>Field</strong></td><td><span t-field="o.field_id.name"/></td></tr>
                             <tr><td><strong>Season</strong></td><td><span t-field="o.season_id"/></td><td><strong>Crop plan</strong></td><td><span t-field="o.plan_id.name"/></td></tr>
-                            <tr><td><strong>Quantity</strong></td><td><span t-field="o.quantity"/> <span t-field="o.uom_id.name"/></td><td><strong>Yield per ha</strong></td><td><span t-field="o.yield_per_ha"/></td></tr>
+                            <tr><td><strong>Quantity</strong></td><td><span t-field="o.quantity"/> <span t-field="o.uom_id.name"/></td><td><strong t-if="not o.mdv_agri_imperial_units">Yield per ha</strong><strong t-if="o.mdv_agri_imperial_units">Yield per acre</strong></td><td><span t-if="not o.mdv_agri_imperial_units" t-field="o.yield_per_ha"/><span t-if="o.mdv_agri_imperial_units" t-field="o.yield_per_acre"/></td></tr>
                             <tr><td><strong>Quality grade</strong></td><td><span t-out="o.grade_id.name or '-'"/></td><td><strong>Moisture</strong></td><td><span t-field="o.moisture_pct"/> %</td></tr>
                             <tr><td><strong>Lot</strong></td><td><span t-out="o.lot_id.name or '-'"/></td><td><strong>Stored in</strong></td><td><span t-field="o.location_dest_id"/></td></tr>
                             <tr><td><strong>Sold</strong></td><td><span t-field="o.sold_qty"/></td><td><strong>Unsold</strong></td><td><span t-field="o.available_qty"/></td></tr>
@@ -155,18 +157,18 @@
                             <tr><td><strong>Field</strong></td><td><span t-field="o.field_id"/></td><td><strong>Crop</strong></td><td><span t-field="o.crop_id"/></td></tr>
                             <tr><td><strong>Date</strong></td><td><span t-field="o.date"/></td><td><strong>Scout</strong></td><td><span t-field="o.scout_id"/></td></tr>
                             <tr><td><strong>Pest / disease</strong></td><td><span t-field="o.pest_id"/></td><td><strong>Severity</strong></td><td><span t-field="o.severity"/></td></tr>
-                            <tr><td><strong>Plants affected</strong></td><td><span t-field="o.incidence_pct"/> %</td><td><strong>Affected area</strong></td><td><span t-field="o.affected_area_ha"/> ha</td></tr>
+                            <tr><td><strong>Plants affected</strong></td><td><span t-field="o.incidence_pct"/> %</td><td><strong>Affected area</strong></td><td><span t-if="not o.mdv_agri_imperial_units" t-field="o.affected_area_ha"/><span t-if="o.mdv_agri_imperial_units" t-field="o.affected_area_acre"/> <span t-out="'acres' if o.mdv_agri_imperial_units else 'ha'"/></td></tr>
                         </table>
                         <h5 t-if="o.observation">Observation</h5>
                         <p t-if="o.observation" t-field="o.observation"/>
                         <h5 t-if="o.recommendation">Recommended treatment</h5>
                         <p t-if="o.recommendation" t-field="o.recommendation"/>
                         <table class="table table-sm" t-if="o.treatment_line_ids">
-                            <thead><tr><th>Product</th><th class="text-end">Rate per ha</th><th class="text-end">Quantity</th></tr></thead>
+                            <thead><tr><th>Product</th><th class="text-end" t-if="not o.mdv_agri_imperial_units">Rate per ha</th><th class="text-end" t-if="o.mdv_agri_imperial_units">Rate per acre</th><th class="text-end">Quantity</th></tr></thead>
                             <tbody>
                                 <tr t-foreach="o.treatment_line_ids" t-as="line">
                                     <td><span t-field="line.product_id"/></td>
-                                    <td class="text-end"><span t-field="line.rate_per_ha"/></td>
+                                    <td class="text-end"><span t-if="not o.mdv_agri_imperial_units" t-field="line.rate_per_ha"/><span t-if="o.mdv_agri_imperial_units" t-field="line.rate_per_acre"/></td>
                                     <td class="text-end"><span t-field="line.quantity"/> <span t-field="line.uom_id.name"/></td>
                                 </tr>
                             </tbody>

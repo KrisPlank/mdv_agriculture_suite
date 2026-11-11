@@ -11,13 +11,16 @@
                 <field name="field_id"/>
                 <field name="crop_id"/>
                 <field name="variety_id" optional="hide"/>
-                <field name="area_ha" sum="Total"/>
+                <field name="mdv_agri_imperial_units" column_invisible="1"/>
+                <field name="area_ha" sum="Total" invisible="mdv_agri_imperial_units"/>
+                <field name="area_acre" string="Planted Area (acres)" sum="Total" invisible="not mdv_agri_imperial_units"/>
                 <field name="sowing_date"/>
                 <field name="expected_harvest_date" optional="show"/>
                 <field name="budget_total" sum="Total" optional="show"/>
                 <field name="direct_cost" sum="Total"/>
                 <field name="harvested_qty" sum="Total" optional="show"/>
-                <field name="yield_per_ha" optional="show"/>
+                <field name="yield_per_ha" optional="show" invisible="mdv_agri_imperial_units"/>
+                <field name="yield_per_acre" string="Yield per acre" optional="show" invisible="not mdv_agri_imperial_units"/>
                 <field name="revenue" sum="Total" optional="hide"/>
                 <field name="currency_id" column_invisible="1"/>
                 <field name="state" widget="badge" decoration-success="state == 'growing'" decoration-info="state == 'confirmed'" decoration-warning="state == 'harvested'" decoration-muted="state in ('closed', 'cancelled')"/>
@@ -31,13 +34,14 @@
         <field name="arch" type="xml">
             <kanban default_group_by="state">
                 <field name="currency_id"/>
+                <field name="mdv_agri_imperial_units"/>
                 <templates>
                     <t t-name="card">
                         <div class="d-flex">
                             <field name="crop_id" class="fw-bold"/>
                             <field name="name" class="ms-auto text-muted small"/>
                         </div>
-                        <div><field name="field_id"/> - <field name="area_ha"/> ha</div>
+                        <div><field name="field_id"/> - <field name="area_ha" invisible="mdv_agri_imperial_units"/><field name="area_acre" invisible="not mdv_agri_imperial_units"/></div>
                         <div class="text-muted small">Sowing <field name="sowing_date"/>, harvest <field name="expected_harvest_date"/></div>
                         <div class="small">Cost <field name="direct_cost" widget="monetary"/> / budget <field name="budget_total" widget="monetary"/></div>
                         <footer>
@@ -97,7 +101,9 @@
                             <field name="farm_id"/>
                             <field name="crop_id" readonly="state != 'draft'"/>
                             <field name="variety_id" readonly="state != 'draft'"/>
-                            <field name="area_ha" readonly="state not in ('draft', 'confirmed')"/>
+                            <field name="mdv_agri_imperial_units" invisible="1"/>
+                            <field name="area_ha" readonly="state not in ('draft', 'confirmed')" invisible="mdv_agri_imperial_units"/>
+                            <field name="area_acre" readonly="state not in ('draft', 'confirmed')" invisible="not mdv_agri_imperial_units"/>
                             <field name="responsible_id" widget="many2one_avatar_user"/>
                         </group>
                         <group>
@@ -106,11 +112,14 @@
                             <field name="growing_days"/>
                             <field name="expected_harvest_date"/>
                             <field name="harvest_end_date" invisible="not harvest_end_date"/>
-                            <label for="expected_yield_per_ha"/>
+                            <label for="expected_yield_per_ha" invisible="mdv_agri_imperial_units"/>
+                            <label for="expected_yield_per_acre" string="Expected Yield per acre" invisible="not mdv_agri_imperial_units"/>
                             <div class="o_row">
-                                <field name="expected_yield_per_ha"/>
+                                <field name="expected_yield_per_ha" invisible="mdv_agri_imperial_units"/>
+                                <field name="expected_yield_per_acre" invisible="not mdv_agri_imperial_units"/>
                                 <field name="yield_uom_id" options="{'no_open': True}"/>
-                                <span>per ha</span>
+                                <span invisible="mdv_agri_imperial_units">per ha</span>
+                                <span invisible="not mdv_agri_imperial_units">per acre</span>
                             </div>
                             <field name="expected_yield"/>
                             <field name="request_id" invisible="not request_id"/>
@@ -126,9 +135,12 @@
                             <field name="open_scouting_count"/>
                         </group>
                         <group>
-                            <field name="gdd_accumulated"/>
-                            <field name="rain_since_sowing_mm"/>
-                            <field name="irrigation_m3"/>
+                            <field name="gdd_accumulated" invisible="mdv_agri_imperial_units"/>
+                            <field name="gdd_accumulated_f" string="Growing Degree Days (F-days)" invisible="not mdv_agri_imperial_units"/>
+                            <field name="rain_since_sowing_mm" invisible="mdv_agri_imperial_units"/>
+                            <field name="rain_since_sowing_in" string="Rain Since Sowing (in)" invisible="not mdv_agri_imperial_units"/>
+                            <field name="irrigation_m3" invisible="mdv_agri_imperial_units"/>
+                            <field name="irrigation_us_gal" string="Irrigation Water (US gal)" invisible="not mdv_agri_imperial_units"/>
                         </group>
                     </group>
                     <notebook>
@@ -146,9 +158,11 @@
                                     <field name="budget_total"/>
                                     <field name="budget_variance" decoration-danger="budget_variance &lt; 0" decoration-success="budget_variance &gt;= 0"/>
                                     <field name="budget_used_pct" widget="progressbar"/>
-                                    <field name="cost_per_ha"/>
+                                    <field name="cost_per_ha" invisible="mdv_agri_imperial_units"/>
+                                    <field name="cost_per_acre" string="Cost per acre" invisible="not mdv_agri_imperial_units"/>
                                     <field name="harvested_qty"/>
-                                    <field name="yield_per_ha"/>
+                                    <field name="yield_per_ha" invisible="mdv_agri_imperial_units"/>
+                                    <field name="yield_per_acre" string="Yield per acre" invisible="not mdv_agri_imperial_units"/>
                                     <field name="yield_gap_pct"/>
                                     <field name="cost_per_unit"/>
                                     <field name="revenue"/>

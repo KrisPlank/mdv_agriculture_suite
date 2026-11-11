@@ -27,7 +27,7 @@
                                     <div class="mb-3">
                                         <div class="d-flex">
                                             <strong t-esc="row.crop"/>
-                                            <span class="ms-2 text-muted"><t t-esc="row.area.toFixed(2)"/> ha</span>
+                                            <span class="ms-2 text-muted"><t t-esc="row.area.toFixed(2)"/> <t t-esc="state.data.imperial_units ? 'acres' : 'ha'"/></span>
                                             <span class="ms-2 text-muted" t-if="row.harvested">- harvested <t t-esc="row.harvested.toLocaleString()"/> <t t-esc="row.uom"/></span>
                                             <span class="ms-auto"><t t-esc="money(row.actual)"/> / <t t-esc="money(row.budget)"/></span>
                                         </div>

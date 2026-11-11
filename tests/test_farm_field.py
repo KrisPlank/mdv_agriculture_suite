@@ -37,6 +37,13 @@ class TestFarmField(AgriCommon):
         self.assertAlmostEqual(self.field.area_acre, 24.71, places=1)
         self.assertAlmostEqual(self.farm.total_area_ha, 14.0)
 
+    def test_imperial_area_setting_and_acre_input(self):
+        self.company.mdv_agri_imperial_units = True
+        self.assertTrue(self.field.mdv_agri_imperial_units)
+        self.assertAlmostEqual(self.field.area_acre, 10.0 * 2.4710538, places=4)
+        self.field.area_acre = 10.0
+        self.assertAlmostEqual(self.field.area_ha, 10.0 / 2.4710538, places=4)
+
     def test_farm_map_collection_lists_mapped_fields(self):
         self.field.boundary_geojson = rect_geojson(41.5, -93.6, 0.002, 0.002)
         data = json.loads(self.farm.map_geojson)

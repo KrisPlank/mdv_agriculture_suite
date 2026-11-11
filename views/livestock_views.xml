@@ -11,9 +11,11 @@
                 <field name="species_id"/>
                 <field name="herd_type"/>
                 <field name="shed" optional="show"/>
+                <field name="mdv_agri_imperial_units" column_invisible="1"/>
                 <field name="current_count" sum="Total"/>
                 <field name="mortality_pct" optional="show"/>
-                <field name="milk_7d" optional="show"/>
+                <field name="milk_7d" optional="show" invisible="mdv_agri_imperial_units"/>
+                <field name="milk_7d_us_gal" string="Milk Last 7 Days (US gal)" optional="show" invisible="not mdv_agri_imperial_units"/>
                 <field name="eggs_7d" optional="show"/>
             </list>
         </field>
@@ -26,6 +28,7 @@
             <kanban>
                 <field name="is_flock"/>
                 <field name="species_kind"/>
+                <field name="mdv_agri_imperial_units"/>
                 <templates>
                     <t t-name="card">
                         <div class="d-flex">
@@ -34,7 +37,7 @@
                         </div>
                         <div class="text-muted"><field name="farm_id"/> - <field name="shed"/></div>
                         <div class="fs-4"><field name="current_count"/> <span class="fs-6 text-muted">head</span></div>
-                        <div t-if="record.species_kind.raw_value != 'poultry'">Milk 7 days: <field name="milk_7d"/> L</div>
+                        <div t-if="record.species_kind.raw_value != 'poultry'">Milk 7 days: <field name="milk_7d" invisible="mdv_agri_imperial_units"/><field name="milk_7d_us_gal" invisible="not mdv_agri_imperial_units"/> <span invisible="mdv_agri_imperial_units">L</span><span invisible="not mdv_agri_imperial_units">US gal</span></div>
                         <div t-if="record.species_kind.raw_value == 'poultry'">Eggs 7 days: <field name="eggs_7d"/> - lay rate <field name="lay_rate_7d"/> %</div>
                         <div class="text-muted small">Mortality <field name="mortality_pct"/> %</div>
                     </t>
@@ -53,12 +56,14 @@
                     <button name="action_create_analytic_account" type="object" string="Create Analytic Account" invisible="analytic_account_id" groups="analytic.group_analytic_accounting"/>
                 </header>
                 <sheet>
+                    <field name="mdv_agri_imperial_units" invisible="1"/>
                     <div class="oe_button_box" name="button_box">
                         <button name="action_view_animals" type="object" class="oe_stat_button" icon="fa-tag" invisible="is_flock">
                             <field name="current_count" widget="statinfo" string="Animals"/>
                         </button>
                         <button name="action_view_milk" type="object" class="oe_stat_button" icon="fa-tint" invisible="is_flock">
-                            <field name="milk_7d" widget="statinfo" string="Milk 7d (L)"/>
+                            <field name="milk_7d" widget="statinfo" string="Milk 7d (L)" invisible="mdv_agri_imperial_units"/>
+                            <field name="milk_7d_us_gal" widget="statinfo" string="Milk 7d (US gal)" invisible="not mdv_agri_imperial_units"/>
                         </button>
                         <button name="action_view_eggs" type="object" class="oe_stat_button" icon="fa-circle-o" invisible="not is_flock">
                             <field name="eggs_7d" widget="statinfo" string="Eggs 7d"/>
@@ -98,8 +103,10 @@
                     </group>
                     <group string="Performance">
                         <group invisible="is_flock">
-                            <field name="milk_per_head_day"/>
-                            <field name="feed_per_litre"/>
+                            <field name="milk_per_head_day" invisible="mdv_agri_imperial_units"/>
+                            <field name="milk_per_head_day_us_gal" string="Milk per Head per Day (US gal)" invisible="not mdv_agri_imperial_units"/>
+                            <field name="feed_per_litre" invisible="mdv_agri_imperial_units"/>
+                            <field name="feed_per_us_gallon" invisible="not mdv_agri_imperial_units"/>
                         </group>
                         <group invisible="not is_flock">
                             <field name="lay_rate_7d"/>
@@ -192,11 +199,14 @@
                 <field name="sex"/>
                 <field name="age_months" optional="show"/>
                 <field name="herd_id"/>
-                <field name="weight_kg" optional="show"/>
+                <field name="mdv_agri_imperial_units" column_invisible="1"/>
+                <field name="weight_kg" optional="show" invisible="mdv_agri_imperial_units"/>
+                <field name="weight_lb" string="Weight (lb)" optional="show" invisible="not mdv_agri_imperial_units"/>
                 <field name="lactation_status" optional="show"/>
                 <field name="reproductive_status" optional="show"/>
                 <field name="expected_birth_date" optional="show"/>
-                <field name="milk_7d" optional="show"/>
+                <field name="milk_7d" optional="show" invisible="mdv_agri_imperial_units"/>
+                <field name="milk_7d_us_gal" string="Milk Last 7 Days (US gal)" optional="show" invisible="not mdv_agri_imperial_units"/>
                 <field name="withdrawal_until" optional="hide"/>
                 <field name="status" widget="badge" decoration-success="status == 'active'" decoration-danger="status == 'dead'"/>
             </list>
@@ -261,7 +271,9 @@
                             <field name="dam_id"/>
                             <field name="sire_id"/>
                             <field name="mdv_breeding_id" invisible="not mdv_breeding_id"/>
-                            <field name="weight_kg"/>
+                            <field name="mdv_agri_imperial_units" invisible="1"/>
+                            <field name="weight_kg" invisible="mdv_agri_imperial_units"/>
+                            <field name="weight_lb" string="Weight (lb)" invisible="not mdv_agri_imperial_units"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                         </group>
                     </group>
@@ -274,8 +286,10 @@
                         <group>
                             <field name="lactation_status"/>
                             <field name="days_in_milk"/>
-                            <field name="milk_7d"/>
-                            <field name="milk_total"/>
+                            <field name="milk_7d" invisible="mdv_agri_imperial_units"/>
+                            <field name="milk_7d_us_gal" string="Milk Last 7 Days (US gal)" invisible="not mdv_agri_imperial_units"/>
+                            <field name="milk_total" invisible="mdv_agri_imperial_units"/>
+                            <field name="milk_total_us_gal" string="Milk Total (US gal)" invisible="not mdv_agri_imperial_units"/>
                         </group>
                     </group>
                     <notebook>
@@ -307,8 +321,11 @@
                             <field name="weight_log_ids">
                                 <list editable="bottom">
                                     <field name="date"/>
-                                    <field name="weight_kg"/>
-                                    <field name="daily_gain_kg"/>
+                                    <field name="mdv_agri_imperial_units" column_invisible="1"/>
+                                    <field name="weight_kg" invisible="mdv_agri_imperial_units"/>
+                                    <field name="weight_lb" string="Weight (lb)" invisible="not mdv_agri_imperial_units"/>
+                                    <field name="daily_gain_kg" invisible="mdv_agri_imperial_units"/>
+                                    <field name="daily_gain_lb" string="Daily Gain (lb)" invisible="not mdv_agri_imperial_units"/>
                                 </list>
                             </field>
                         </page>
@@ -317,7 +334,9 @@
                                 <list editable="bottom">
                                     <field name="date"/>
                                     <field name="session"/>
-                                    <field name="quantity_l" sum="Total"/>
+                                    <field name="mdv_agri_imperial_units" column_invisible="1"/>
+                                    <field name="quantity_l" sum="Total" invisible="mdv_agri_imperial_units"/>
+                                    <field name="quantity_us_gal" string="Milk (US gal)" sum="Total" invisible="not mdv_agri_imperial_units"/>
                                     <field name="fat_pct"/>
                                     <field name="protein_pct"/>
                                     <field name="scc"/>
@@ -625,7 +644,9 @@
                 <field name="session"/>
                 <field name="animal_id"/>
                 <field name="herd_id"/>
-                <field name="quantity_l" sum="Total"/>
+                <field name="mdv_agri_imperial_units" column_invisible="1"/>
+                <field name="quantity_l" sum="Total" invisible="mdv_agri_imperial_units"/>
+                <field name="quantity_us_gal" string="Milk (US gal)" sum="Total" invisible="not mdv_agri_imperial_units"/>
                 <field name="fat_pct" optional="show"/>
                 <field name="protein_pct" optional="show"/>
                 <field name="scc" optional="show"/>

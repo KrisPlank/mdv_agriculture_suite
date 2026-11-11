@@ -16,7 +16,7 @@ ACTIVITY_TYPES = [
 class AgriCrop(models.Model):
     _name = 'mdv.agri.crop'
     _description = 'Crop'
-    _inherit = ['mail.thread']
+    _inherit = ['mail.thread', 'mdv.agri.unit.mixin']
     _order = 'name'
 
     name = fields.Char(required=True, translate=True, tracking=True)
@@ -34,8 +34,10 @@ class AgriCrop(models.Model):
     yield_uom_id = fields.Many2one('uom.uom', 'Yield Unit', related='product_id.uom_id')
     growing_days = fields.Integer('Days to Harvest', default=120)
     expected_yield_per_ha = fields.Float('Expected Yield per ha', digits=(16, 2))
+    expected_yield_per_acre = fields.Float('Expected Yield per acre', compute='_compute_yield_per_acre', inverse='_inverse_yield_per_acre', digits=(16, 2))
     base_temperature_c = fields.Float('GDD Base (C)', default=10.0,
                                       help='Base temperature used for growing degree days.')
+    base_temperature_f = fields.Float('GDD Base (F)', compute='_compute_base_temperature_f', inverse='_inverse_base_temperature_f')
     season_ids = fields.Many2many('mdv.agri.season', string='Typical Seasons')
     variety_ids = fields.One2many('mdv.agri.crop.variety', 'crop_id', string='Varieties')
     template_line_ids = fields.One2many('mdv.agri.crop.template', 'crop_id', string='Activity Template')
@@ -45,6 +47,24 @@ class AgriCrop(models.Model):
     active = fields.Boolean(default=True)
     color = fields.Integer()
     notes = fields.Html()
+
+    @api.depends('expected_yield_per_ha')
+    def _compute_yield_per_acre(self):
+        for crop in self:
+            crop.expected_yield_per_acre = crop.expected_yield_per_ha / 2.4710538
+
+    def _inverse_yield_per_acre(self):
+        for crop in self:
+            crop.expected_yield_per_ha = crop.expected_yield_per_acre * 2.4710538
+
+    @api.depends('base_temperature_c')
+    def _compute_base_temperature_f(self):
+        for crop in self:
+            crop.base_temperature_f = crop.base_temperature_c * 9 / 5 + 32
+
+    def _inverse_base_temperature_f(self):
+        for crop in self:
+            crop.base_temperature_c = (crop.base_temperature_f - 32) * 5 / 9
 
     @api.constrains('growing_days', 'expected_yield_per_ha')
     def _check_values(self):
@@ -66,16 +86,37 @@ class AgriCrop(models.Model):
 class AgriCropVariety(models.Model):
     _name = 'mdv.agri.crop.variety'
     _description = 'Crop Variety'
+    _inherit = ['mdv.agri.unit.mixin']
     _order = 'crop_id, name'
 
     name = fields.Char(required=True)
     crop_id = fields.Many2one('mdv.agri.crop', required=True, ondelete='cascade')
     growing_days = fields.Integer('Days to Harvest')
     expected_yield_per_ha = fields.Float('Expected Yield per ha', digits=(16, 2))
+    expected_yield_per_acre = fields.Float('Expected Yield per acre', compute='_compute_yield_per_acre', inverse='_inverse_yield_per_acre', digits=(16, 2))
     seed_product_id = fields.Many2one('product.product', 'Seed Product')
     seed_rate_per_ha = fields.Float('Seed Rate per ha')
+    seed_rate_per_acre = fields.Float('Seed Rate per acre', compute='_compute_seed_rate_per_acre', inverse='_inverse_seed_rate_per_acre')
     traits = fields.Char()
     active = fields.Boolean(default=True)
+
+    @api.depends('expected_yield_per_ha')
+    def _compute_yield_per_acre(self):
+        for variety in self:
+            variety.expected_yield_per_acre = variety.expected_yield_per_ha / 2.4710538
+
+    def _inverse_yield_per_acre(self):
+        for variety in self:
+            variety.expected_yield_per_ha = variety.expected_yield_per_acre * 2.4710538
+
+    @api.depends('seed_rate_per_ha')
+    def _compute_seed_rate_per_acre(self):
+        for variety in self:
+            variety.seed_rate_per_acre = variety.seed_rate_per_ha / 2.4710538
+
+    def _inverse_seed_rate_per_acre(self):
+        for variety in self:
+            variety.seed_rate_per_ha = variety.seed_rate_per_acre * 2.4710538
 
     @api.depends('name', 'crop_id.name')
     def _compute_display_name(self):
@@ -86,6 +127,7 @@ class AgriCropVariety(models.Model):
 class AgriCropTemplate(models.Model):
     _name = 'mdv.agri.crop.template'
     _description = 'Crop Activity Template'
+    _inherit = ['mdv.agri.unit.mixin']
     _order = 'crop_id, day_offset, sequence'
 
     crop_id = fields.Many2one('mdv.agri.crop', required=True, ondelete='cascade')
@@ -95,5 +137,35 @@ class AgriCropTemplate(models.Model):
     day_offset = fields.Integer('Day (from sowing)', help='Negative values are before sowing.')
     product_id = fields.Many2one('product.product', 'Material', domain=[('type', '=', 'consu')])
     qty_per_ha = fields.Float('Material per ha')
+    qty_per_acre = fields.Float('Material per acre', compute='_compute_qty_per_acre', inverse='_inverse_qty_per_acre')
     labour_hours_per_ha = fields.Float('Labour h per ha')
+    labour_hours_per_acre = fields.Float('Labour h per acre', compute='_compute_labour_hours_per_acre', inverse='_inverse_labour_hours_per_acre')
     machine_hours_per_ha = fields.Float('Machine h per ha')
+    machine_hours_per_acre = fields.Float('Machine h per acre', compute='_compute_machine_hours_per_acre', inverse='_inverse_machine_hours_per_acre')
+
+    @api.depends('qty_per_ha')
+    def _compute_qty_per_acre(self):
+        for line in self:
+            line.qty_per_acre = line.qty_per_ha / 2.4710538
+
+    def _inverse_qty_per_acre(self):
+        for line in self:
+            line.qty_per_ha = line.qty_per_acre * 2.4710538
+
+    @api.depends('labour_hours_per_ha')
+    def _compute_labour_hours_per_acre(self):
+        for line in self:
+            line.labour_hours_per_acre = line.labour_hours_per_ha / 2.4710538
+
+    def _inverse_labour_hours_per_acre(self):
+        for line in self:
+            line.labour_hours_per_ha = line.labour_hours_per_acre * 2.4710538
+
+    @api.depends('machine_hours_per_ha')
+    def _compute_machine_hours_per_acre(self):
+        for line in self:
+            line.machine_hours_per_acre = line.machine_hours_per_ha / 2.4710538
+
+    def _inverse_machine_hours_per_acre(self):
+        for line in self:
+            line.machine_hours_per_ha = line.machine_hours_per_acre * 2.4710538

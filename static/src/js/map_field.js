@@ -115,7 +115,7 @@ export class AgriMapField extends Component {
                     { color, weight: 2, fillOpacity: 0.35 }
                 ).addTo(this.layer);
                 const p = feature.properties;
-                poly.bindTooltip(`${p.name} - ${p.area_ha} ha${p.crop ? " - " + p.crop : ""}`, {
+                poly.bindTooltip(`${p.name} - ${p.area ?? p.area_ha} ${p.area_unit || "ha"}${p.crop ? " - " + p.crop : ""}`, {
                     permanent: true,
                     direction: "center",
                     className: "o_agri_map_label",
@@ -178,9 +178,11 @@ export class AgriMapField extends Component {
     }
 
     get areaLabel() {
-        return _t("%(points)s points - %(area)s ha", {
+        const imperial = this.props.record.data.mdv_agri_imperial_units;
+        return _t("%(points)s points - %(area)s %(unit)s", {
             points: this.state.points,
-            area: this.state.areaHa.toFixed(2),
+            area: (this.state.areaHa * (imperial ? 2.4710538 : 1)).toFixed(2),
+            unit: imperial ? "acres" : "ha",
         });
     }
 }

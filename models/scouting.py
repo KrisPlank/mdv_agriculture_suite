@@ -33,6 +33,8 @@ class AgriScouting(models.Model):
     severity = fields.Selection(SEVERITY, required=True, default='low', tracking=True)
     incidence_pct = fields.Float('Plants Affected (%)', digits=(5, 1))
     affected_area_ha = fields.Float('Affected Area (ha)', digits=(16, 2))
+    affected_area_acre = fields.Float('Affected Area (acres)', compute='_compute_affected_area_acre',
+                                      inverse='_inverse_affected_area_acre', digits=(16, 2))
     latitude = fields.Float(digits=(10, 6))
     longitude = fields.Float(digits=(10, 6))
     observation = fields.Text()
@@ -47,7 +49,26 @@ class AgriScouting(models.Model):
     temp_max_c = fields.Float('Max Temp (C)', compute='_compute_weather')
     wind_max_kmh = fields.Float('Wind (km/h)', compute='_compute_weather')
     precipitation_mm = fields.Float('Rain (mm)', compute='_compute_weather')
+    temp_max_f = fields.Float('Max Temp (F)', compute='_compute_weather_imperial')
+    wind_max_mph = fields.Float('Wind (mph)', compute='_compute_weather_imperial')
+    precipitation_in = fields.Float('Rain (in)', compute='_compute_weather_imperial')
     color = fields.Integer(compute='_compute_color')
+
+    @api.depends('affected_area_ha')
+    def _compute_affected_area_acre(self):
+        for record in self:
+            record.affected_area_acre = record.affected_area_ha * 2.4710538
+
+    def _inverse_affected_area_acre(self):
+        for record in self:
+            record.affected_area_ha = record.affected_area_acre / 2.4710538
+
+    @api.depends('temp_max_c', 'wind_max_kmh', 'precipitation_mm')
+    def _compute_weather_imperial(self):
+        for record in self:
+            record.temp_max_f = record.temp_max_c * 9 / 5 + 32
+            record.wind_max_mph = record.wind_max_kmh * 0.6213711922
+            record.precipitation_in = record.precipitation_mm / 25.4
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -160,9 +181,21 @@ class AgriScoutingPhoto(models.Model):
 class AgriScoutingTreatment(models.Model):
     _name = 'mdv.agri.scouting.treatment'
     _description = 'Scouting Treatment Line'
+    _inherit = ['mdv.agri.unit.mixin']
 
     scouting_id = fields.Many2one('mdv.agri.scouting', required=True, ondelete='cascade', index=True)
     product_id = fields.Many2one('product.product', required=True, domain=[('type', '=', 'consu')])
     rate_per_ha = fields.Float('Rate per ha', digits=(16, 3))
+    rate_per_acre = fields.Float('Rate per acre', compute='_compute_rate_per_acre',
+                                 inverse='_inverse_rate_per_acre', digits=(16, 3))
     quantity = fields.Float(required=True, digits='Product Unit')
     uom_id = fields.Many2one(related='product_id.uom_id')
+
+    @api.depends('rate_per_ha')
+    def _compute_rate_per_acre(self):
+        for line in self:
+            line.rate_per_acre = line.rate_per_ha / 2.4710538
+
+    def _inverse_rate_per_acre(self):
+        for line in self:
+            line.rate_per_ha = line.rate_per_acre * 2.4710538

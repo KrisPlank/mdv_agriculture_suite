@@ -4,6 +4,7 @@ from odoo import fields, models
 class ResCompany(models.Model):
     _inherit = 'res.company'
 
+    mdv_agri_imperial_units = fields.Boolean('Use Imperial Units', default=False)
     mdv_agri_frost_c = fields.Float('Frost Alert Below (C)', default=0.0)
     mdv_agri_heavy_rain_mm = fields.Float('Heavy Rain Alert From (mm/day)', default=25.0)
     mdv_agri_heat_c = fields.Float('Heat Alert From (C)', default=35.0)

@@ -42,7 +42,7 @@ def ring_area_ha(ring):
 class AgriFarm(models.Model):
     _name = 'mdv.agri.farm'
     _description = 'Farm'
-    _inherit = ['mail.thread', 'mail.activity.mixin']
+    _inherit = ['mail.thread', 'mail.activity.mixin', 'mdv.agri.unit.mixin']
     _order = 'name'
     _check_company_auto = True
 
@@ -84,6 +84,7 @@ class AgriFarm(models.Model):
     total_area_ha = fields.Float('Total Area (ha)', compute='_compute_area', digits=(16, 2))
     total_area_acre = fields.Float('Total Area (acres)', compute='_compute_area', digits=(16, 2))
     cultivated_area_ha = fields.Float('Area Under Crop (ha)', compute='_compute_area', digits=(16, 2))
+    cultivated_area_imperial = fields.Float(compute='_compute_area_imperial')
     map_geojson = fields.Text('Fields Map', compute='_compute_map_geojson')
     last_weather_id = fields.Many2one('mdv.agri.weather.log', compute='_compute_last_weather')
     notes = fields.Html()
@@ -126,7 +127,14 @@ class AgriFarm(models.Model):
             farm.total_area_acre = farm.total_area_ha * HA_TO_ACRE
             farm.cultivated_area_ha = sum(farm.field_ids.filtered(lambda f: f.state == 'growing').mapped('area_ha'))
 
-    @api.depends('field_ids.boundary_geojson', 'field_ids.name', 'latitude', 'longitude')
+    @api.depends('total_area_ha', 'cultivated_area_ha')
+    def _compute_area_imperial(self):
+        for farm in self:
+            farm.cultivated_area_imperial = farm.cultivated_area_ha * HA_TO_ACRE
+
+    @api.depends('field_ids.boundary_geojson', 'field_ids.name', 'field_ids.area_ha', 'field_ids.state',
+                 'field_ids.current_plan_id.crop_id.name', 'latitude', 'longitude',
+                 'company_id.mdv_agri_imperial_units')
     def _compute_map_geojson(self):
         for farm in self:
             features = []
@@ -136,7 +144,10 @@ class AgriFarm(models.Model):
                     continue
                 features.append({
                     'type': 'Feature',
-                    'properties': {'name': fld.name, 'state': fld.state, 'area_ha': round(fld.area_ha, 2),
+                    'properties': {'name': fld.name, 'state': fld.state,
+                                   'area': round(fld.area_acre if farm.company_id.mdv_agri_imperial_units
+                                                 else fld.area_ha, 2),
+                                   'area_unit': 'acres' if farm.company_id.mdv_agri_imperial_units else 'ha',
                                    'crop': fld.current_plan_id.crop_id.name or ''},
                     'geometry': {'type': 'Polygon', 'coordinates': [[list(p) for p in ring + ring[:1]]]},
                 })
@@ -181,7 +192,7 @@ class AgriFarm(models.Model):
 class AgriField(models.Model):
     _name = 'mdv.agri.field'
     _description = 'Field / Plot'
-    _inherit = ['mail.thread', 'mail.activity.mixin']
+    _inherit = ['mail.thread', 'mail.activity.mixin', 'mdv.agri.unit.mixin']
     _order = 'farm_id, name'
     _check_company_auto = True
 
@@ -192,8 +203,9 @@ class AgriField(models.Model):
     farm_id = fields.Many2one('mdv.agri.farm', required=True, ondelete='restrict', check_company=True, index=True)
     company_id = fields.Many2one(related='farm_id.company_id', store=True, index=True)
     area_ha = fields.Float('Area (ha)', digits=(16, 2), tracking=True)
-    area_acre = fields.Float('Area (acres)', compute='_compute_area_acre', digits=(16, 2))
+    area_acre = fields.Float('Area (acres)', compute='_compute_area_acre', inverse='_inverse_area_acre', digits=(16, 2))
     map_area_ha = fields.Float('Mapped Area (ha)', compute='_compute_map', store=True, digits=(16, 2))
+    map_area_acre = fields.Float('Mapped Area (acres)', compute='_compute_map_area_acre', digits=(16, 2))
     boundary_geojson = fields.Text('Boundary', help='Field boundary drawn on the map (GeoJSON polygon).')
     latitude = fields.Float(digits=(10, 6), compute='_compute_map', store=True, readonly=False)
     longitude = fields.Float(digits=(10, 6), compute='_compute_map', store=True, readonly=False)
@@ -239,6 +251,15 @@ class AgriField(models.Model):
     def _compute_area_acre(self):
         for fld in self:
             fld.area_acre = fld.area_ha * HA_TO_ACRE
+
+    def _inverse_area_acre(self):
+        for fld in self:
+            fld.area_ha = fld.area_acre / HA_TO_ACRE
+
+    @api.depends('map_area_ha')
+    def _compute_map_area_acre(self):
+        for fld in self:
+            fld.map_area_acre = fld.map_area_ha * HA_TO_ACRE
 
     @api.depends('boundary_geojson')
     def _compute_map(self):

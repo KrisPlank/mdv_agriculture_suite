@@ -12,7 +12,7 @@ HERD_TYPES = [
 class AgriHerd(models.Model):
     _name = 'mdv.agri.herd'
     _description = 'Herd or Flock'
-    _inherit = ['mail.thread', 'mail.activity.mixin', 'mdv.agri.stock.mixin']
+    _inherit = ['mail.thread', 'mail.activity.mixin', 'mdv.agri.stock.mixin', 'mdv.agri.unit.mixin']
     _order = 'farm_id, name'
     _check_company_auto = True
 
@@ -48,13 +48,27 @@ class AgriHerd(models.Model):
     current_count = fields.Integer('Head Count', compute='_compute_counts', store=True)
     mortality_pct = fields.Float('Mortality (%)', compute='_compute_counts', store=True, digits=(5, 2))
     milk_7d = fields.Float('Milk Last 7 Days (L)', compute='_compute_kpis', digits=(16, 1))
+    milk_7d_us_gal = fields.Float('Milk Last 7 Days (US gal)', compute='_compute_milk_us_gal', digits=(16, 2))
     milk_per_head_day = fields.Float('Milk per Head per Day (L)', compute='_compute_kpis', digits=(16, 2))
+    milk_per_head_day_us_gal = fields.Float('Milk per Head per Day (US gal)', compute='_compute_milk_us_gal', digits=(16, 3))
     eggs_7d = fields.Integer('Eggs Last 7 Days', compute='_compute_kpis')
     lay_rate_7d = fields.Float('Lay Rate 7 Days (%)', compute='_compute_kpis', digits=(5, 1))
     feed_cost = fields.Monetary('Feed Cost', compute='_compute_kpis')
     vet_cost = fields.Monetary('Vet Cost', compute='_compute_kpis')
     feed_per_litre = fields.Float('Feed kg per Litre (30 days)', compute='_compute_kpis', digits=(16, 3))
+    feed_per_us_gallon = fields.Float('Feed lb per US gal (30 days)', compute='_compute_feed_per_us_gallon', digits=(16, 3))
     notes = fields.Html()
+
+    @api.depends('milk_7d', 'milk_per_head_day')
+    def _compute_milk_us_gal(self):
+        for herd in self:
+            herd.milk_7d_us_gal = herd.milk_7d * 0.264172052
+            herd.milk_per_head_day_us_gal = herd.milk_per_head_day * 0.264172052
+
+    @api.depends('feed_per_litre')
+    def _compute_feed_per_us_gallon(self):
+        for herd in self:
+            herd.feed_per_us_gallon = herd.feed_per_litre * 2.2046226218 / 0.264172052
 
     @api.onchange('species_id')
     def _onchange_species_id(self):
@@ -165,7 +179,7 @@ class AgriFeedRation(models.Model):
 class AgriAnimal(models.Model):
     _name = 'mdv.agri.animal'
     _description = 'Animal'
-    _inherit = ['mail.thread', 'mail.activity.mixin']
+    _inherit = ['mail.thread', 'mail.activity.mixin', 'mdv.agri.unit.mixin']
     _order = 'tag'
     _rec_names_search = ['tag', 'name', 'rfid']
     _check_company_auto = True
@@ -196,6 +210,7 @@ class AgriAnimal(models.Model):
     days_in_milk = fields.Integer(compute='_compute_age')
     weight_log_ids = fields.One2many('mdv.agri.animal.weight', 'animal_id', string='Weights')
     weight_kg = fields.Float('Weight (kg)', compute='_compute_weight', store=True, digits=(16, 1))
+    weight_lb = fields.Float('Weight (lb)', compute='_compute_weight_lb', digits=(16, 1))
     breeding_ids = fields.One2many('mdv.agri.breeding', 'animal_id', string='Breeding')
     treatment_ids = fields.One2many('mdv.agri.vet.treatment', 'animal_id', string='Vet Treatments')
     milk_log_ids = fields.One2many('mdv.agri.milk.log', 'animal_id', string='Milk')
@@ -207,6 +222,8 @@ class AgriAnimal(models.Model):
                                    help='Milk and meat must not be sold until this date because of a treatment.')
     milk_7d = fields.Float('Milk Last 7 Days (L)', compute='_compute_milk', digits=(16, 1))
     milk_total = fields.Float('Milk Total (L)', compute='_compute_milk', digits=(16, 1))
+    milk_7d_us_gal = fields.Float('Milk Last 7 Days (US gal)', compute='_compute_milk_us_gal', digits=(16, 2))
+    milk_total_us_gal = fields.Float('Milk Total (US gal)', compute='_compute_milk_us_gal', digits=(16, 2))
     notes = fields.Html()
     color = fields.Integer(compute='_compute_color')
 
@@ -240,6 +257,11 @@ class AgriAnimal(models.Model):
         for animal in self:
             animal.weight_kg = animal.weight_log_ids.sorted('date', reverse=True)[:1].weight_kg
 
+    @api.depends('weight_kg')
+    def _compute_weight_lb(self):
+        for animal in self:
+            animal.weight_lb = animal.weight_kg * 2.2046226218
+
     @api.depends('breeding_ids.state', 'breeding_ids.expected_birth_date')
     def _compute_reproduction(self):
         for animal in self:
@@ -262,6 +284,12 @@ class AgriAnimal(models.Model):
             logs = animal.milk_log_ids.filtered(lambda m: not m.discarded)
             animal.milk_total = sum(logs.mapped('quantity_l'))
             animal.milk_7d = sum(logs.filtered(lambda m: week <= m.date <= today).mapped('quantity_l'))
+
+    @api.depends('milk_7d', 'milk_total')
+    def _compute_milk_us_gal(self):
+        for animal in self:
+            animal.milk_7d_us_gal = animal.milk_7d * 0.264172052
+            animal.milk_total_us_gal = animal.milk_total * 0.264172052
 
     @api.constrains('dam_id', 'sire_id', 'species_id', 'birth_date')
     def _check_parents(self):
@@ -289,12 +317,30 @@ class AgriAnimal(models.Model):
 class AgriAnimalWeight(models.Model):
     _name = 'mdv.agri.animal.weight'
     _description = 'Animal Weight'
+    _inherit = ['mdv.agri.unit.mixin']
     _order = 'date desc'
 
     animal_id = fields.Many2one('mdv.agri.animal', required=True, ondelete='cascade', index=True)
+    company_id = fields.Many2one(related='animal_id.company_id')
     date = fields.Date(required=True, default=fields.Date.context_today)
     weight_kg = fields.Float('Weight (kg)', required=True, digits=(16, 1))
+    weight_lb = fields.Float('Weight (lb)', compute='_compute_weight_lb', inverse='_inverse_weight_lb', digits=(16, 1))
     daily_gain_kg = fields.Float('Daily Gain (kg)', compute='_compute_gain', digits=(16, 3))
+    daily_gain_lb = fields.Float('Daily Gain (lb)', compute='_compute_daily_gain_lb', digits=(16, 3))
+
+    @api.depends('weight_kg')
+    def _compute_weight_lb(self):
+        for record in self:
+            record.weight_lb = record.weight_kg * 2.2046226218
+
+    def _inverse_weight_lb(self):
+        for record in self:
+            record.weight_kg = record.weight_lb / 2.2046226218
+
+    @api.depends('daily_gain_kg')
+    def _compute_daily_gain_lb(self):
+        for record in self:
+            record.daily_gain_lb = record.daily_gain_kg * 2.2046226218
 
     @api.depends('weight_kg', 'date', 'animal_id.weight_log_ids')
     def _compute_gain(self):

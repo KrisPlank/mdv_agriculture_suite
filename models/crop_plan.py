@@ -9,7 +9,7 @@ from odoo.tools import float_compare
 class AgriCropPlan(models.Model):
     _name = 'mdv.agri.crop.plan'
     _description = 'Crop Plan'
-    _inherit = ['mail.thread', 'mail.activity.mixin']
+    _inherit = ['mail.thread', 'mail.activity.mixin', 'mdv.agri.unit.mixin']
     _order = 'sowing_date desc, id desc'
     _check_company_auto = True
 
@@ -28,6 +28,7 @@ class AgriCropPlan(models.Model):
     responsible_id = fields.Many2one('res.users', default=lambda self: self.env.user, tracking=True)
     area_ha = fields.Float('Planted Area (ha)', digits=(16, 2), compute='_compute_area_ha', store=True,
                            readonly=False, tracking=True)
+    area_acre = fields.Float('Planted Area (acres)', compute='_compute_area_acre', inverse='_inverse_area_acre', digits=(16, 2))
     sowing_date = fields.Date('Planned Sowing', required=True, default=fields.Date.context_today, tracking=True)
     actual_sowing_date = fields.Date('Actual Sowing', copy=False)
     growing_days = fields.Integer(compute='_compute_growing_days', store=True, readonly=False)
@@ -35,6 +36,8 @@ class AgriCropPlan(models.Model):
     harvest_end_date = fields.Date('Harvest Finished', copy=False)
     expected_yield_per_ha = fields.Float(compute='_compute_expected_yield', store=True, readonly=False,
                                          digits=(16, 2))
+    expected_yield_per_acre = fields.Float('Expected Yield per acre', compute='_compute_expected_yield_per_acre',
+                                           inverse='_inverse_expected_yield_per_acre', digits=(16, 2))
     expected_yield = fields.Float(compute='_compute_expected_yield_total', store=True, digits=(16, 2))
     yield_uom_id = fields.Many2one(related='crop_id.yield_uom_id')
     analytic_account_id = fields.Many2one('account.analytic.account', copy=False, check_company=True)
@@ -67,8 +70,10 @@ class AgriCropPlan(models.Model):
                                       help='Budget minus actual cost: negative means over budget.')
     budget_used_pct = fields.Float('Budget Used (%)', compute='_compute_other_cost')
     cost_per_ha = fields.Monetary('Cost per ha', compute='_compute_other_cost')
+    cost_per_acre = fields.Monetary('Cost per acre', compute='_compute_cost_per_acre')
     harvested_qty = fields.Float(compute='_compute_harvest', store=True, digits=(16, 2))
     yield_per_ha = fields.Float('Yield per ha', compute='_compute_harvest', store=True, digits=(16, 2))
+    yield_per_acre = fields.Float('Yield per acre', compute='_compute_yield_per_acre', digits=(16, 2))
     yield_gap_pct = fields.Float('Yield vs Expected (%)', compute='_compute_harvest', store=True)
     cost_per_unit = fields.Monetary('Cost per Unit of Yield', compute='_compute_other_cost')
     revenue = fields.Monetary(compute='_compute_revenue', store=True)
@@ -76,8 +81,11 @@ class AgriCropPlan(models.Model):
     days_since_sowing = fields.Integer(compute='_compute_agronomy')
     progress_pct = fields.Float('Season Progress (%)', compute='_compute_agronomy')
     gdd_accumulated = fields.Float('Growing Degree Days', compute='_compute_agronomy', digits=(16, 1))
+    gdd_accumulated_f = fields.Float('Growing Degree Days (F-days)', compute='_compute_gdd_accumulated_f', digits=(16, 1))
     rain_since_sowing_mm = fields.Float('Rain Since Sowing (mm)', compute='_compute_agronomy', digits=(16, 1))
+    rain_since_sowing_in = fields.Float('Rain Since Sowing (in)', compute='_compute_rain_since_sowing_in', digits=(16, 2))
     irrigation_m3 = fields.Float('Irrigation Water (m3)', compute='_compute_agronomy', digits=(16, 1))
+    irrigation_us_gal = fields.Float('Irrigation Water (US gal)', compute='_compute_irrigation_us_gal', digits=(16, 1))
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -92,6 +100,49 @@ class AgriCropPlan(models.Model):
         for plan in self:
             if not plan.area_ha:
                 plan.area_ha = plan.field_id.area_ha
+
+    @api.depends('area_ha')
+    def _compute_area_acre(self):
+        for plan in self:
+            plan.area_acre = plan.area_ha * 2.4710538
+
+    def _inverse_area_acre(self):
+        for plan in self:
+            plan.area_ha = plan.area_acre / 2.4710538
+
+    @api.depends('irrigation_m3')
+    def _compute_irrigation_us_gal(self):
+        for plan in self:
+            plan.irrigation_us_gal = plan.irrigation_m3 * 264.172052
+
+    @api.depends('expected_yield_per_ha')
+    def _compute_expected_yield_per_acre(self):
+        for plan in self:
+            plan.expected_yield_per_acre = plan.expected_yield_per_ha / 2.4710538
+
+    def _inverse_expected_yield_per_acre(self):
+        for plan in self:
+            plan.expected_yield_per_ha = plan.expected_yield_per_acre * 2.4710538
+
+    @api.depends('cost_per_ha')
+    def _compute_cost_per_acre(self):
+        for plan in self:
+            plan.cost_per_acre = plan.cost_per_ha / 2.4710538
+
+    @api.depends('yield_per_ha')
+    def _compute_yield_per_acre(self):
+        for plan in self:
+            plan.yield_per_acre = plan.yield_per_ha / 2.4710538
+
+    @api.depends('rain_since_sowing_mm')
+    def _compute_rain_since_sowing_in(self):
+        for plan in self:
+            plan.rain_since_sowing_in = plan.rain_since_sowing_mm / 25.4
+
+    @api.depends('gdd_accumulated')
+    def _compute_gdd_accumulated_f(self):
+        for plan in self:
+            plan.gdd_accumulated_f = plan.gdd_accumulated * 9 / 5
 
     @api.depends('crop_id', 'variety_id')
     def _compute_growing_days(self):
