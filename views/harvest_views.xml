@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_agri_harvest_list" model="ir.ui.view">
+        <field name="name">mdv.agri.harvest.list</field>
+        <field name="model">mdv.agri.harvest</field>
+        <field name="arch" type="xml">
+            <list>
+                <header>
+                    <button name="action_create_sale_order" type="object" string="Sell Harvest"/>
+                </header>
+                <field name="name"/>
+                <field name="date"/>
+                <field name="plan_id" optional="show"/>
+                <field name="crop_id"/>
+                <field name="field_id"/>
+                <field name="season_id" optional="hide"/>
+                <field name="quantity" sum="Total"/>
+                <field name="uom_id"/>
+                <field name="yield_per_ha" optional="show"/>
+                <field name="grade_id"/>
+                <field name="moisture_pct" optional="hide"/>
+                <field name="lot_id" optional="show"/>
+                <field name="available_qty" optional="show"/>
+                <field name="state" widget="badge" decoration-success="state == 'done'" decoration-muted="state == 'cancelled'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_agri_harvest_form" model="ir.ui.view">
+        <field name="name">mdv.agri.harvest.form</field>
+        <field name="model">mdv.agri.harvest</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_validate" type="object" string="Receive in Stock" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_create_sale_order" type="object" string="Sell Harvest" class="btn-primary" invisible="state != 'done' or available_qty &lt;= 0"/>
+                    <button name="action_print" type="object" string="Harvest Report" invisible="state != 'done'"/>
+                    <button name="action_reset" type="object" string="Undo Receipt" invisible="state != 'done'" groups="mdv_agriculture_suite.group_agri_manager"/>
+                    <button name="action_cancel" type="object" string="Cancel" invisible="state != 'draft'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_sale_orders" type="object" class="oe_stat_button" icon="fa-dollar" invisible="not sale_line_ids">
+                            <field name="sold_qty" widget="statinfo" string="Sold"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="plan_id" readonly="state != 'draft'"/>
+                            <field name="crop_id"/>
+                            <field name="field_id"/>
+                            <field name="season_id"/>
+                            <field name="product_id" readonly="state != 'draft'"/>
+                            <label for="quantity"/>
+                            <div class="o_row">
+                                <field name="quantity" readonly="state != 'draft'"/>
+                                <field name="uom_id"/>
+                            </div>
+                            <field name="area_harvested_ha" readonly="state != 'draft'"/>
+                            <field name="yield_per_ha"/>
+                        </group>
+                        <group>
+                            <field name="date" readonly="state != 'draft'"/>
+                            <field name="grade_id"/>
+                            <field name="moisture_pct"/>
+                            <field name="lot_name" invisible="state != 'draft'"/>
+                            <field name="lot_id" invisible="not lot_id"/>
+                            <field name="location_dest_id" readonly="state != 'draft'"/>
+                            <field name="available_qty" invisible="state != 'done'"/>
+                            <field name="user_id"/>
+                            <field name="sale_line_ids" invisible="1"/>
+                            <field name="company_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <field name="notes" placeholder="Notes"/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_agri_harvest_pivot" model="ir.ui.view">
+        <field name="name">mdv.agri.harvest.pivot</field>
+        <field name="model">mdv.agri.harvest</field>
+        <field name="arch" type="xml">
+            <pivot string="Harvest Analysis" sample="1">
+                <field name="crop_id" type="row"/>
+                <field name="field_id" type="row"/>
+                <field name="season_id" type="col"/>
+                <field name="quantity" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_agri_harvest_graph" model="ir.ui.view">
+        <field name="name">mdv.agri.harvest.graph</field>
+        <field name="model">mdv.agri.harvest</field>
+        <field name="arch" type="xml">
+            <graph string="Harvest" type="bar" sample="1">
+                <field name="crop_id"/>
+                <field name="grade_id"/>
+                <field name="quantity" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_agri_harvest_search" model="ir.ui.view">
+        <field name="name">mdv.agri.harvest.search</field>
+        <field name="model">mdv.agri.harvest</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="crop_id"/>
+                <field name="field_id"/>
+                <field name="lot_id"/>
+                <filter name="done" string="Received" domain="[('state', '=', 'done')]"/>
+                <filter name="unsold" string="Not Fully Sold" domain="[('state', '=', 'done'), ('sale_line_ids', '=', False)]"/>
+                <group>
+                    <filter name="group_crop" string="Crop" context="{'group_by': 'crop_id'}"/>
+                    <filter name="group_field" string="Field" context="{'group_by': 'field_id'}"/>
+                    <filter name="group_season" string="Season" context="{'group_by': 'season_id'}"/>
+                    <filter name="group_grade" string="Grade" context="{'group_by': 'grade_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_agri_harvest" model="ir.actions.act_window">
+        <field name="name">Harvests</field>
+        <field name="res_model">mdv.agri.harvest</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Record a harvest</p>
+            <p>Each harvest becomes a stock lot with its field, season, grade and moisture, ready to sell.</p>
+        </field>
+    </record>
+
+    <record id="action_agri_harvest_analysis" model="ir.actions.act_window">
+        <field name="name">Harvest Analysis</field>
+        <field name="res_model">mdv.agri.harvest</field>
+        <field name="view_mode">graph,pivot,list</field>
+        <field name="context">{'search_default_done': 1}</field>
+    </record>
+
+    <!-- Sell wizard -->
+    <record id="view_agri_harvest_sell_wizard_form" model="ir.ui.view">
+        <field name="name">mdv.agri.harvest.sell.wizard.form</field>
+        <field name="model">mdv.agri.harvest.sell.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    <field name="partner_id"/>
+                    <field name="harvest_ids" invisible="1"/>
+                </group>
+                <field name="line_ids">
+                    <list editable="bottom" create="0">
+                        <field name="harvest_id" readonly="1"/>
+                        <field name="lot_id"/>
+                        <field name="grade_id"/>
+                        <field name="available_qty"/>
+                        <field name="quantity"/>
+                        <field name="price_unit"/>
+                    </list>
+                </field>
+                <footer>
+                    <button name="action_create" type="object" string="Create Quotation" class="btn-primary"/>
+                    <button special="cancel" string="Cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Lot traceability -->
+    <record id="view_production_lot_form_agri" model="ir.ui.view">
+        <field name="name">stock.lot.form.agri</field>
+        <field name="model">stock.lot</field>
+        <field name="inherit_id" ref="stock.view_production_lot_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='main_group']" position="after">
+                <group string="Farm Origin" name="farm_origin" invisible="not mdv_harvest_id">
+                    <group>
+                        <field name="mdv_harvest_id"/>
+                        <field name="mdv_crop_plan_id"/>
+                        <field name="mdv_farm_id"/>
+                        <field name="mdv_field_id"/>
+                    </group>
+                    <group>
+                        <field name="mdv_season_id"/>
+                        <field name="mdv_harvest_date"/>
+                        <field name="mdv_grade_id"/>
+                        <field name="mdv_moisture_pct"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Sales / purchase links -->
+    <record id="view_order_form_agri" model="ir.ui.view">
+        <field name="name">sale.order.form.agri</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='order_line']/list/field[@name='product_uom_qty']" position="before">
+                <field name="mdv_lot_id" optional="show" readonly="1"/>
+            </xpath>
+            <xpath expr="//group[@name='sale_info']" position="inside">
+                <field name="mdv_crop_request_id" invisible="not mdv_crop_request_id"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="purchase_order_form_agri" model="ir.ui.view">
+        <field name="name">purchase.order.form.agri</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='origin']" position="after">
+                <field name="mdv_crop_plan_id" invisible="not mdv_crop_plan_id"/>
+                <field name="mdv_crop_request_id" invisible="not mdv_crop_request_id"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Scouting -->
+    <record id="view_agri_scouting_list" model="ir.ui.view">
+        <field name="name">mdv.agri.scouting.list</field>
+        <field name="model">mdv.agri.scouting</field>
+        <field name="arch" type="xml">
+            <list decoration-danger="severity == 'critical'" decoration-warning="severity == 'high'">
+                <field name="name"/>
+                <field name="date"/>
+                <field name="field_id"/>
+                <field name="crop_id"/>
+                <field name="pest_id"/>
+                <field name="pest_type" optional="show"/>
+                <field name="severity" widget="badge" decoration-danger="severity in ('high', 'critical')" decoration-warning="severity == 'medium'" decoration-success="severity == 'low'"/>
+                <field name="incidence_pct" optional="show"/>
+                <field name="affected_area_ha" optional="show"/>
+                <field name="scout_id" widget="many2one_avatar_user" optional="show"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_agri_scouting_kanban" model="ir.ui.view">
+        <field name="name">mdv.agri.scouting.kanban</field>
+        <field name="model">mdv.agri.scouting</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state">
+                <field name="color"/>
+                <templates>
+                    <t t-name="card" class="flex-row">
+                        <field name="image_main" widget="image" class="me-2" options="{'size': [64, 64]}" invisible="not image_main"/>
+                        <div>
+                            <field name="pest_id" class="fw-bold"/>
+                            <div><field name="field_id"/> - <field name="crop_id"/></div>
+                            <div class="text-muted small"><field name="date"/> - <field name="name"/></div>
+                            <field name="severity" widget="badge"/>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_agri_scouting_form" model="ir.ui.view">
+        <field name="name">mdv.agri.scouting.form</field>
+        <field name="model">mdv.agri.scouting</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_create_spray" type="object" string="Create Spraying Activity" class="btn-primary" invisible="spray_activity_id or state != 'draft'"/>
+                    <button name="action_print" type="object" string="Scouting Report"/>
+                    <button name="action_close" type="object" string="Close" invisible="state == 'closed'"/>
+                    <button name="action_reopen" type="object" string="Reopen" invisible="state != 'closed'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="plan_id"/>
+                            <field name="field_id"/>
+                            <field name="crop_id"/>
+                            <field name="date"/>
+                            <field name="scout_id" widget="many2one_avatar_user"/>
+                            <field name="growth_stage"/>
+                        </group>
+                        <group>
+                            <field name="pest_id"/>
+                            <field name="pest_type"/>
+                            <field name="severity"/>
+                            <field name="incidence_pct"/>
+                            <field name="affected_area_ha"/>
+                            <field name="latitude" invisible="not latitude and not longitude"/>
+                            <field name="longitude" invisible="not latitude and not longitude"/>
+                            <field name="spray_activity_id" invisible="not spray_activity_id"/>
+                            <field name="company_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <group string="Weather that day" invisible="not weather_log_id">
+                        <group>
+                            <field name="weather_log_id" invisible="1"/>
+                            <field name="temp_max_c"/>
+                            <field name="precipitation_mm"/>
+                        </group>
+                        <group>
+                            <field name="wind_max_kmh"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Photos" name="photos">
+                            <field name="photo_ids" mode="kanban">
+                                <kanban>
+                                    <templates>
+                                        <t t-name="card">
+                                            <field name="image" widget="image" options="{'size': [180, 140]}"/>
+                                            <field name="name"/>
+                                        </t>
+                                    </templates>
+                                </kanban>
+                                <form>
+                                    <group>
+                                        <field name="image" widget="image"/>
+                                        <field name="name"/>
+                                    </group>
+                                </form>
+                            </field>
+                        </page>
+                        <page string="Observation" name="observation">
+                            <field name="observation" placeholder="What did you see? Where in the field?"/>
+                        </page>
+                        <page string="Recommended Treatment" name="treatment">
+                            <field name="recommendation"/>
+                            <field name="treatment_line_ids" readonly="state != 'draft'">
+                                <list editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="rate_per_ha"/>
+                                    <field name="quantity"/>
+                                    <field name="uom_id"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_agri_scouting_pivot" model="ir.ui.view">
+        <field name="name">mdv.agri.scouting.pivot</field>
+        <field name="model">mdv.agri.scouting</field>
+        <field name="arch" type="xml">
+            <pivot string="Scouting Analysis" sample="1">
+                <field name="pest_id" type="row"/>
+                <field name="severity" type="col"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_agri_scouting_search" model="ir.ui.view">
+        <field name="name">mdv.agri.scouting.search</field>
+        <field name="model">mdv.agri.scouting</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="pest_id"/>
+                <field name="field_id"/>
+                <field name="crop_id"/>
+                <filter name="open" string="Open" domain="[('state', 'in', ('draft', 'reviewed'))]"/>
+                <filter name="severe" string="High or Critical" domain="[('severity', 'in', ('high', 'critical'))]"/>
+                <group>
+                    <filter name="group_pest" string="Pest" context="{'group_by': 'pest_id'}"/>
+                    <filter name="group_field" string="Field" context="{'group_by': 'field_id'}"/>
+                    <filter name="group_severity" string="Severity" context="{'group_by': 'severity'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_agri_scouting" model="ir.actions.act_window">
+        <field name="name">Crop Scouting</field>
+        <field name="res_model">mdv.agri.scouting</field>
+        <field name="view_mode">list,kanban,form,pivot</field>
+        <field name="context">{'search_default_open': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Record a scouting observation</p>
+            <p>Photos, severity and the recommended treatment, turned into a spraying activity in one click.</p>
+        </field>
+    </record>
+
+    <!-- Weather -->
+    <record id="view_agri_weather_log_list" model="ir.ui.view">
+        <field name="name">mdv.agri.weather.log.list</field>
+        <field name="model">mdv.agri.weather.log</field>
+        <field name="arch" type="xml">
+            <list editable="top" decoration-info="is_forecast" decoration-danger="has_alert">
+                <field name="farm_id"/>
+                <field name="date"/>
+                <field name="is_forecast" optional="show"/>
+                <field name="condition" optional="show"/>
+                <field name="temp_min_c"/>
+                <field name="temp_max_c"/>
+                <field name="temp_mean_c" optional="hide"/>
+                <field name="precipitation_mm" sum="Total"/>
+                <field name="humidity_pct" optional="show"/>
+                <field name="wind_max_kmh" optional="show"/>
+                <field name="wind_gust_kmh" optional="hide"/>
+                <field name="et0_mm" optional="show" sum="Total"/>
+                <field name="gdd" optional="show" sum="Total"/>
+                <field name="alert_summary"/>
+                <field name="has_alert" column_invisible="1"/>
+                <field name="source" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_agri_weather_log_graph" model="ir.ui.view">
+        <field name="name">mdv.agri.weather.log.graph</field>
+        <field name="model">mdv.agri.weather.log</field>
+        <field name="arch" type="xml">
+            <graph string="Weather" type="line" sample="1">
+                <field name="date" interval="day"/>
+                <field name="temp_mean_c" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_agri_weather_log_pivot" model="ir.ui.view">
+        <field name="name">mdv.agri.weather.log.pivot</field>
+        <field name="model">mdv.agri.weather.log</field>
+        <field name="arch" type="xml">
+            <pivot string="Weather" sample="1">
+                <field name="farm_id" type="row"/>
+                <field name="date" interval="month" type="col"/>
+                <field name="precipitation_mm" type="measure"/>
+                <field name="gdd" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_agri_weather_log_search" model="ir.ui.view">
+        <field name="name">mdv.agri.weather.log.search</field>
+        <field name="model">mdv.agri.weather.log</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="farm_id"/>
+                <filter name="alerts" string="Alerts" domain="[('has_alert', '=', True)]"/>
+                <filter name="frost" string="Frost" domain="[('frost_alert', '=', True)]"/>
+                <filter name="rain" string="Heavy Rain" domain="[('heavy_rain_alert', '=', True)]"/>
+                <filter name="forecast" string="Forecast" domain="[('is_forecast', '=', True)]"/>
+                <filter name="observed" string="Observed" domain="[('is_forecast', '=', False)]"/>
+                <filter name="date" string="Date" date="date"/>
+                <group>
+                    <filter name="group_farm" string="Farm" context="{'group_by': 'farm_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_agri_weather_log" model="ir.actions.act_window">
+        <field name="name">Weather Log</field>
+        <field name="res_model">mdv.agri.weather.log</field>
+        <field name="view_mode">list,graph,pivot</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No weather recorded yet</p>
+            <p>Set the latitude and longitude of a farm: weather is filled daily from Open-Meteo, no API key needed.</p>
+        </field>
+    </record>
+
+    <record id="view_agri_weather_history_wizard_form" model="ir.ui.view">
+        <field name="name">mdv.agri.weather.history.wizard.form</field>
+        <field name="model">mdv.agri.weather.history.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <p class="text-muted">Loads past daily weather from the Open-Meteo archive (keyless).</p>
+                <group>
+                    <field name="farm_ids" widget="many2many_tags"/>
+                    <field name="date_from"/>
+                    <field name="date_to"/>
+                </group>
+                <footer>
+                    <button name="action_load" type="object" string="Load" class="btn-primary"/>
+                    <button special="cancel" string="Cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_agri_weather_history_wizard" model="ir.actions.act_window">
+        <field name="name">Load Weather History</field>
+        <field name="res_model">mdv.agri.weather.history.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

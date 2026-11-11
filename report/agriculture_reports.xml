@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_job_cost_sheet" model="ir.actions.report">
+        <field name="name">Job Cost Sheet</field>
+        <field name="model">mdv.agri.crop.plan</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">mdv_agriculture_suite.report_job_cost_sheet</field>
+        <field name="report_file">mdv_agriculture_suite.report_job_cost_sheet</field>
+        <field name="print_report_name">'Job Cost Sheet - %s' % object.name</field>
+        <field name="binding_model_id" ref="model_mdv_agri_crop_plan"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <record id="action_report_harvest" model="ir.actions.report">
+        <field name="name">Harvest Report</field>
+        <field name="model">mdv.agri.harvest</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">mdv_agriculture_suite.report_harvest</field>
+        <field name="report_file">mdv_agriculture_suite.report_harvest</field>
+        <field name="print_report_name">'Harvest - %s' % object.name</field>
+        <field name="binding_model_id" ref="model_mdv_agri_harvest"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <record id="action_report_scouting" model="ir.actions.report">
+        <field name="name">Scouting Report</field>
+        <field name="model">mdv.agri.scouting</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">mdv_agriculture_suite.report_scouting</field>
+        <field name="report_file">mdv_agriculture_suite.report_scouting</field>
+        <field name="print_report_name">'Scouting - %s' % object.name</field>
+        <field name="binding_model_id" ref="model_mdv_agri_scouting"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_job_cost_sheet">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <t t-set="cur" t-value="o.currency_id"/>
+                    <div class="page">
+                        <h2>Job Cost Sheet <span t-field="o.name"/></h2>
+                        <table class="table table-sm table-borderless mb-3">
+                            <tr>
+                                <td><strong>Crop:</strong> <span t-field="o.crop_id"/> <t t-if="o.variety_id">(<span t-field="o.variety_id.name"/>)</t></td>
+                                <td><strong>Season:</strong> <span t-field="o.season_id"/></td>
+                                <td><strong>Status:</strong> <span t-field="o.state"/></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Farm / field:</strong> <span t-field="o.farm_id"/> / <span t-field="o.field_id.name"/></td>
+                                <td><strong>Area:</strong> <span t-field="o.area_ha"/> ha</td>
+                                <td><strong>Sowing:</strong> <span t-out="o.actual_sowing_date or o.sowing_date"/></td>
+                            </tr>
+                        </table>
+                        <h5>Budget vs actual</h5>
+                        <table class="table table-sm o_main_table">
+                            <thead>
+                                <tr>
+                                    <th>Cost type</th>
+                                    <th class="text-end">Budget</th>
+                                    <th class="text-end">Actual</th>
+                                    <th class="text-end">Variance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="o._cost_sheet_rows()" t-as="row">
+                                    <td><span t-out="row['label']"/></td>
+                                    <td class="text-end"><span t-out="row['budget']" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
+                                    <td class="text-end"><span t-out="row['actual']" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
+                                    <td t-attf-class="text-end {{'text-danger' if row['variance'] &lt; 0 else ''}}"><span t-out="row['variance']" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
+                                </tr>
+                                <tr class="fw-bold">
+                                    <td>Total</td>
+                                    <td class="text-end"><span t-field="o.budget_total"/></td>
+                                    <td class="text-end"><span t-field="o.total_cost"/></td>
+                                    <td class="text-end"><span t-field="o.budget_variance"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <h5>Results</h5>
+                        <table class="table table-sm">
+                            <tr>
+                                <td>Cost per ha</td><td class="text-end"><span t-field="o.cost_per_ha"/></td>
+                                <td>Harvested</td><td class="text-end"><span t-field="o.harvested_qty"/> <span t-field="o.yield_uom_id.name"/></td>
+                            </tr>
+                            <tr>
+                                <td>Yield per ha</td><td class="text-end"><span t-field="o.yield_per_ha"/> (<span t-out="round(o.yield_gap_pct)"/>% of expected)</td>
+                                <td>Cost per unit of yield</td><td class="text-end"><span t-field="o.cost_per_unit"/></td>
+                            </tr>
+                            <tr>
+                                <td>Revenue</td><td class="text-end"><span t-field="o.revenue"/></td>
+                                <td>Margin</td><td class="text-end"><span t-field="o.margin"/></td>
+                            </tr>
+                        </table>
+                        <h5>Cost entries</h5>
+                        <table class="table table-sm o_main_table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Activity</th>
+                                    <th class="text-end">Quantity</th>
+                                    <th class="text-end">Unit cost</th>
+                                    <th class="text-end">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="o.cost_line_ids.sorted('date')" t-as="line">
+                                    <td><span t-field="line.date"/></td>
+                                    <td><span t-field="line.cost_type"/></td>
+                                    <td><span t-field="line.name"/></td>
+                                    <td><span t-out="line.activity_id.name or ''"/></td>
+                                    <td class="text-end"><span t-field="line.quantity"/> <span t-out="line.unit_label or ''"/></td>
+                                    <td class="text-end"><span t-field="line.unit_cost"/></td>
+                                    <td class="text-end"><span t-field="line.amount"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <template id="report_harvest">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h2>Harvest <span t-field="o.name"/></h2>
+                        <table class="table table-sm">
+                            <tr><td><strong>Crop</strong></td><td><span t-field="o.crop_id"/></td><td><strong>Date</strong></td><td><span t-field="o.date"/></td></tr>
+                            <tr><td><strong>Farm</strong></td><td><span t-field="o.farm_id"/></td><td><strong>Field</strong></td><td><span t-field="o.field_id.name"/></td></tr>
+                            <tr><td><strong>Season</strong></td><td><span t-field="o.season_id"/></td><td><strong>Crop plan</strong></td><td><span t-field="o.plan_id.name"/></td></tr>
+                            <tr><td><strong>Quantity</strong></td><td><span t-field="o.quantity"/> <span t-field="o.uom_id.name"/></td><td><strong>Yield per ha</strong></td><td><span t-field="o.yield_per_ha"/></td></tr>
+                            <tr><td><strong>Quality grade</strong></td><td><span t-out="o.grade_id.name or '-'"/></td><td><strong>Moisture</strong></td><td><span t-field="o.moisture_pct"/> %</td></tr>
+                            <tr><td><strong>Lot</strong></td><td><span t-out="o.lot_id.name or '-'"/></td><td><strong>Stored in</strong></td><td><span t-field="o.location_dest_id"/></td></tr>
+                            <tr><td><strong>Sold</strong></td><td><span t-field="o.sold_qty"/></td><td><strong>Unsold</strong></td><td><span t-field="o.available_qty"/></td></tr>
+                        </table>
+                        <p t-if="o.notes" t-field="o.notes"/>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <template id="report_scouting">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h2>Scouting Report <span t-field="o.name"/></h2>
+                        <table class="table table-sm">
+                            <tr><td><strong>Field</strong></td><td><span t-field="o.field_id"/></td><td><strong>Crop</strong></td><td><span t-field="o.crop_id"/></td></tr>
+                            <tr><td><strong>Date</strong></td><td><span t-field="o.date"/></td><td><strong>Scout</strong></td><td><span t-field="o.scout_id"/></td></tr>
+                            <tr><td><strong>Pest / disease</strong></td><td><span t-field="o.pest_id"/></td><td><strong>Severity</strong></td><td><span t-field="o.severity"/></td></tr>
+                            <tr><td><strong>Plants affected</strong></td><td><span t-field="o.incidence_pct"/> %</td><td><strong>Affected area</strong></td><td><span t-field="o.affected_area_ha"/> ha</td></tr>
+                        </table>
+                        <h5 t-if="o.observation">Observation</h5>
+                        <p t-if="o.observation" t-field="o.observation"/>
+                        <h5 t-if="o.recommendation">Recommended treatment</h5>
+                        <p t-if="o.recommendation" t-field="o.recommendation"/>
+                        <table class="table table-sm" t-if="o.treatment_line_ids">
+                            <thead><tr><th>Product</th><th class="text-end">Rate per ha</th><th class="text-end">Quantity</th></tr></thead>
+                            <tbody>
+                                <tr t-foreach="o.treatment_line_ids" t-as="line">
+                                    <td><span t-field="line.product_id"/></td>
+                                    <td class="text-end"><span t-field="line.rate_per_ha"/></td>
+                                    <td class="text-end"><span t-field="line.quantity"/> <span t-field="line.uom_id.name"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div t-if="o.photo_ids" class="row">
+                            <div t-foreach="o.photo_ids" t-as="photo" class="col-4 mb-2">
+                                <img t-att-src="image_data_uri(photo.image)" style="max-width: 100%; max-height: 220px;"/>
+                                <div class="small" t-out="photo.name or ''"/>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

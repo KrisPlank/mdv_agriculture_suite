@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="portal_my_home_crop_requests" name="Crop Requests" inherit_id="portal.portal_my_home" customize_show="True" priority="45">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="before">
+            <t t-set="portal_client_category_enable" t-value="True"/>
+        </xpath>
+        <div id="portal_client_category" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="icon" t-value="'/mdv_agriculture_suite/static/description/icon.png'"/>
+                <t t-set="title">Crop Requests</t>
+                <t t-set="url" t-value="'/my/crop-requests'"/>
+                <t t-set="text">Ask us to grow a crop for you, offer your crop, or follow your requests</t>
+                <t t-set="placeholder_count" t-value="'crop_request_count'"/>
+            </t>
+        </div>
+    </template>
+
+    <template id="portal_breadcrumbs_crop_request" inherit_id="portal.portal_breadcrumbs" priority="45">
+        <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
+            <li t-if="page_name in ('crop_request', 'crop_request_new')" t-attf-class="breadcrumb-item #{'active' if not crop_request else ''}">
+                <a t-if="crop_request or page_name == 'crop_request_new'" href="/my/crop-requests">Crop Requests</a>
+                <t t-else="">Crop Requests</t>
+            </li>
+            <li t-if="crop_request" class="breadcrumb-item active" t-out="crop_request.name"/>
+            <li t-if="page_name == 'crop_request_new'" class="breadcrumb-item active">New</li>
+        </xpath>
+    </template>
+
+    <template id="portal_my_crop_requests" name="My Crop Requests">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">Crop Requests</t>
+            </t>
+            <div class="my-3">
+                <a href="/my/crop-requests/new" class="btn btn-primary">New Crop Request</a>
+            </div>
+            <t t-if="not crop_requests">
+                <div class="alert alert-info">You have no crop request yet.</div>
+            </t>
+            <t t-if="crop_requests" t-call="portal.portal_table">
+                <thead>
+                    <tr class="active">
+                        <th>Reference</th>
+                        <th>Crop</th>
+                        <th>Type</th>
+                        <th class="text-end">Quantity</th>
+                        <th>Wanted by</th>
+                        <th class="text-end">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr t-foreach="crop_requests" t-as="req">
+                        <td><a t-att-href="req.get_portal_url()" t-out="req.name"/></td>
+                        <td t-out="req.crop_id.name"/>
+                        <td ><span t-field="req.request_type"/></td>
+                        <td class="text-end"><t t-out="req.quantity"/> <t t-out="req.uom_id.name or ''"/></td>
+                        <td ><span t-field="req.desired_date"/></td>
+                        <td class="text-end"><span class="badge text-bg-light" t-field="req.state"/></td>
+                    </tr>
+                </tbody>
+            </t>
+        </t>
+    </template>
+
+    <template id="portal_crop_request_page" name="Crop Request">
+        <t t-call="portal.portal_layout">
+            <t t-set="o_portal_fullwidth_alert" groups="mdv_agriculture_suite.group_agri_user">
+                <t t-call="portal.portal_back_in_edit_mode">
+                    <t t-set="backend_url" t-value="'/odoo/action-mdv_agriculture_suite.action_agri_crop_request/%s' % crop_request.id"/>
+                </t>
+            </t>
+            <div t-if="request.params.get('submitted')" class="alert alert-success mt-3">Thank you. Your crop request <strong t-out="crop_request.name"/> was sent; we will answer here.</div>
+            <div class="card mt-3">
+                <div class="card-header d-flex">
+                    <h4 class="m-0">Crop Request <t t-out="crop_request.name"/></h4>
+                    <span class="badge text-bg-info ms-auto align-self-center" t-field="crop_request.state"/>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Crop:</strong> <t t-out="crop_request.crop_id.name"/> <t t-if="crop_request.variety_id">(<t t-out="crop_request.variety_id.name"/>)</t></p>
+                            <p><strong>Type:</strong> <span t-field="crop_request.request_type"/></p>
+                            <p t-if="crop_request.quantity"><strong>Quantity:</strong> <t t-out="crop_request.quantity"/> <t t-out="crop_request.uom_id.name or ''"/></p>
+                            <p t-if="crop_request.area_ha"><strong>Area:</strong> <t t-out="crop_request.area_ha"/> ha</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p t-if="crop_request.desired_date"><strong>Wanted by:</strong> <span t-field="crop_request.desired_date"/></p>
+                            <p t-if="crop_request.land_location"><strong>Land location:</strong> <t t-out="crop_request.land_location"/></p>
+                            <p t-if="crop_request.plan_id"><strong>Planned sowing:</strong> <span t-field="crop_request.plan_id.sowing_date"/>, expected harvest <span t-field="crop_request.plan_id.expected_harvest_date"/></p>
+                        </div>
+                    </div>
+                    <p t-if="crop_request.description" t-field="crop_request.description"/>
+                </div>
+            </div>
+            <div class="mt-4">
+                <h4>Messages</h4>
+                <t t-call="portal.message_thread"/>
+            </div>
+        </t>
+    </template>
+
+    <template id="crop_request_form_fields" name="Crop Request Form Fields">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label" for="request_type">What do you need?</label>
+                <select name="request_type" id="request_type" t-attf-class="form-select #{'is-invalid' if error.get('request_type') else ''}">
+                    <t t-foreach="request_types" t-as="rt">
+                        <option t-att-value="rt[0]" t-att-selected="values.get('request_type') == rt[0]" t-out="rt[1]"/>
+                    </t>
+                </select>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label" for="crop_id">Crop</label>
+                <select name="crop_id" id="crop_id" t-attf-class="form-select #{'is-invalid' if error.get('crop_id') else ''}">
+                    <option value="">Choose a crop</option>
+                    <t t-foreach="crops" t-as="crop">
+                        <option t-att-value="crop.id" t-att-selected="str(values.get('crop_id')) == str(crop.id)" t-out="crop.name"/>
+                    </t>
+                </select>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label" for="quantity">Quantity</label>
+                <input type="number" step="any" min="0" name="quantity" id="quantity" t-att-value="values.get('quantity')"
+                       t-attf-class="form-control #{'is-invalid' if error.get('quantity') else ''}"/>
+                <div class="form-text">In the crop's unit (for example kg or t)</div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label" for="area_ha">Or area (ha)</label>
+                <input type="number" step="any" min="0" name="area_ha" id="area_ha" t-att-value="values.get('area_ha')"
+                       t-attf-class="form-control #{'is-invalid' if error.get('area_ha') else ''}"/>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label" for="desired_date">Wanted by</label>
+                <input type="date" name="desired_date" id="desired_date" t-att-value="values.get('desired_date')"
+                       t-attf-class="form-control #{'is-invalid' if error.get('desired_date') else ''}"/>
+            </div>
+            <div class="col-12 mb-3">
+                <label class="form-label" for="land_location">Land location (for farming services)</label>
+                <input type="text" name="land_location" id="land_location" class="form-control" t-att-value="values.get('land_location')"/>
+            </div>
+            <div class="col-12 mb-3">
+                <label class="form-label" for="description">Details</label>
+                <textarea name="description" id="description" rows="4" class="form-control" t-out="values.get('description')"/>
+            </div>
+        </div>
+    </template>
+
+    <template id="portal_crop_request_form" name="New Crop Request">
+        <t t-call="portal.portal_layout">
+            <div class="card mt-3">
+                <div class="card-header"><h4 class="m-0">New Crop Request</h4></div>
+                <div class="card-body">
+                    <div t-if="error" class="alert alert-danger">Please check the highlighted fields: choose a crop and give a quantity or an area.</div>
+                    <form action="/my/crop-requests/submit" method="post">
+                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                        <t t-call="mdv_agriculture_suite.crop_request_form_fields"/>
+                        <button type="submit" class="btn btn-primary">Send Request</button>
+                    </form>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="website_crop_request" name="Crop Request (website)">
+        <t t-call="website.layout">
+            <div id="wrap" class="container py-5">
+                <h1>Request a Crop</h1>
+                <p class="lead">Ask us to grow and supply a crop, offer your harvest as a contract grower, or have us farm your land.</p>
+                <div t-if="error" class="alert alert-danger">Please check the highlighted fields.</div>
+                <form action="/crop-request/submit" method="post" class="mt-4">
+                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                    <div class="row" t-if="request.env.user._is_public()">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="contact_name">Your name</label>
+                            <input type="text" name="contact_name" id="contact_name" t-att-value="values.get('contact_name')"
+                                   t-attf-class="form-control #{'is-invalid' if error.get('contact_name') else ''}"/>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="email">Email</label>
+                            <input type="email" name="email" id="email" t-att-value="values.get('email')"
+                                   t-attf-class="form-control #{'is-invalid' if error.get('email') else ''}"/>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="phone">Phone</label>
+                            <input type="text" name="phone" id="phone" class="form-control" t-att-value="values.get('phone')"/>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="company">Company / farm</label>
+                            <input type="text" name="company" id="company" class="form-control" t-att-value="values.get('company')"/>
+                        </div>
+                    </div>
+                    <t t-call="mdv_agriculture_suite.crop_request_form_fields"/>
+                    <button type="submit" class="btn btn-primary btn-lg">Send Request</button>
+                </form>
+            </div>
+        </t>
+    </template>
+
+    <template id="website_crop_request_thanks" name="Crop Request Sent">
+        <t t-call="website.layout">
+            <div id="wrap" class="container py-5">
+                <h1>Thank you</h1>
+                <p class="lead">Your crop request <strong t-out="crop_request.name"/> was received. We will contact you soon.</p>
+                <a href="/" class="btn btn-secondary">Back to the website</a>
+            </div>
+        </t>
+    </template>
+</odoo>

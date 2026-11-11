@@ -1,0 +1,822 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Herd / flock -->
+    <record id="view_agri_herd_list" model="ir.ui.view">
+        <field name="name">mdv.agri.herd.list</field>
+        <field name="model">mdv.agri.herd</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="farm_id"/>
+                <field name="species_id"/>
+                <field name="herd_type"/>
+                <field name="shed" optional="show"/>
+                <field name="current_count" sum="Total"/>
+                <field name="mortality_pct" optional="show"/>
+                <field name="milk_7d" optional="show"/>
+                <field name="eggs_7d" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_agri_herd_kanban" model="ir.ui.view">
+        <field name="name">mdv.agri.herd.kanban</field>
+        <field name="model">mdv.agri.herd</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="is_flock"/>
+                <field name="species_kind"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex">
+                            <field name="name" class="fw-bold fs-5"/>
+                            <field name="herd_type" class="ms-auto badge text-bg-light"/>
+                        </div>
+                        <div class="text-muted"><field name="farm_id"/> - <field name="shed"/></div>
+                        <div class="fs-4"><field name="current_count"/> <span class="fs-6 text-muted">head</span></div>
+                        <div t-if="record.species_kind.raw_value != 'poultry'">Milk 7 days: <field name="milk_7d"/> L</div>
+                        <div t-if="record.species_kind.raw_value == 'poultry'">Eggs 7 days: <field name="eggs_7d"/> - lay rate <field name="lay_rate_7d"/> %</div>
+                        <div class="text-muted small">Mortality <field name="mortality_pct"/> %</div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_agri_herd_form" model="ir.ui.view">
+        <field name="name">mdv.agri.herd.form</field>
+        <field name="model">mdv.agri.herd</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_record_daily_feed" type="object" string="Record Today's Feed" class="btn-primary" invisible="not ration_line_ids"/>
+                    <button name="action_create_analytic_account" type="object" string="Create Analytic Account" invisible="analytic_account_id" groups="analytic.group_analytic_accounting"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_animals" type="object" class="oe_stat_button" icon="fa-tag" invisible="is_flock">
+                            <field name="current_count" widget="statinfo" string="Animals"/>
+                        </button>
+                        <button name="action_view_milk" type="object" class="oe_stat_button" icon="fa-tint" invisible="is_flock">
+                            <field name="milk_7d" widget="statinfo" string="Milk 7d (L)"/>
+                        </button>
+                        <button name="action_view_eggs" type="object" class="oe_stat_button" icon="fa-circle-o" invisible="not is_flock">
+                            <field name="eggs_7d" widget="statinfo" string="Eggs 7d"/>
+                        </button>
+                        <button name="action_view_feed" type="object" class="oe_stat_button" icon="fa-cutlery">
+                            <field name="feed_cost" widget="statinfo" string="Feed Cost"/>
+                        </button>
+                        <button name="action_view_treatments" type="object" class="oe_stat_button" icon="fa-medkit">
+                            <field name="vet_cost" widget="statinfo" string="Vet Cost"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="e.g. Milking Herd A"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="farm_id"/>
+                            <field name="species_id"/>
+                            <field name="breed_id"/>
+                            <field name="herd_type"/>
+                            <field name="is_flock"/>
+                            <field name="shed"/>
+                            <field name="keeper_id"/>
+                        </group>
+                        <group>
+                            <field name="placement_date" invisible="not is_flock"/>
+                            <field name="age_weeks" invisible="not is_flock"/>
+                            <field name="initial_count" invisible="not is_flock"/>
+                            <field name="sold_count" invisible="not is_flock"/>
+                            <field name="current_count"/>
+                            <field name="mortality_count"/>
+                            <field name="mortality_pct"/>
+                            <field name="analytic_account_id" groups="analytic.group_analytic_accounting"/>
+                            <field name="company_id" invisible="1"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <group string="Performance">
+                        <group invisible="is_flock">
+                            <field name="milk_per_head_day"/>
+                            <field name="feed_per_litre"/>
+                        </group>
+                        <group invisible="not is_flock">
+                            <field name="lay_rate_7d"/>
+                        </group>
+                        <group>
+                            <field name="feed_cost"/>
+                            <field name="vet_cost"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Animals" name="animals" invisible="is_flock">
+                            <field name="animal_ids" context="{'default_herd_id': id, 'default_species_id': species_id}">
+                                <list>
+                                    <field name="tag"/>
+                                    <field name="name"/>
+                                    <field name="breed_id"/>
+                                    <field name="sex"/>
+                                    <field name="age_months"/>
+                                    <field name="lactation_status"/>
+                                    <field name="reproductive_status"/>
+                                    <field name="status" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Daily Ration" name="ration">
+                            <p class="text-muted">Quantity per head per day. "Record Today's Feed" multiplies it by the head count and takes it out of the farm stock.</p>
+                            <field name="ration_line_ids">
+                                <list editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="qty_per_head"/>
+                                    <field name="uom_id"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Mortality" name="mortality">
+                            <field name="mortality_ids" context="{'default_herd_id': id}">
+                                <list editable="bottom">
+                                    <field name="date"/>
+                                    <field name="animal_id"/>
+                                    <field name="count" sum="Total"/>
+                                    <field name="cause"/>
+                                    <field name="notes"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Notes" name="notes">
+                            <field name="notes"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_agri_herd_search" model="ir.ui.view">
+        <field name="name">mdv.agri.herd.search</field>
+        <field name="model">mdv.agri.herd</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="farm_id"/>
+                <field name="species_id"/>
+                <filter name="flocks" string="Flocks" domain="[('is_flock', '=', True)]"/>
+                <filter name="herds" string="Herds" domain="[('is_flock', '=', False)]"/>
+                <group>
+                    <filter name="group_farm" string="Farm" context="{'group_by': 'farm_id'}"/>
+                    <filter name="group_type" string="Type" context="{'group_by': 'herd_type'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_agri_herd" model="ir.actions.act_window">
+        <field name="name">Herds and Flocks</field>
+        <field name="res_model">mdv.agri.herd</field>
+        <field name="view_mode">kanban,list,form</field>
+    </record>
+
+    <!-- Animal -->
+    <record id="view_agri_animal_list" model="ir.ui.view">
+        <field name="name">mdv.agri.animal.list</field>
+        <field name="model">mdv.agri.animal</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="tag"/>
+                <field name="name"/>
+                <field name="species_id"/>
+                <field name="breed_id" optional="show"/>
+                <field name="sex"/>
+                <field name="age_months" optional="show"/>
+                <field name="herd_id"/>
+                <field name="weight_kg" optional="show"/>
+                <field name="lactation_status" optional="show"/>
+                <field name="reproductive_status" optional="show"/>
+                <field name="expected_birth_date" optional="show"/>
+                <field name="milk_7d" optional="show"/>
+                <field name="withdrawal_until" optional="hide"/>
+                <field name="status" widget="badge" decoration-success="status == 'active'" decoration-danger="status == 'dead'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_agri_animal_kanban" model="ir.ui.view">
+        <field name="name">mdv.agri.animal.kanban</field>
+        <field name="model">mdv.agri.animal</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="color"/>
+                <templates>
+                    <t t-name="card" class="flex-row">
+                        <field name="image" widget="image" class="me-2" options="{'size': [64, 64]}" invisible="not image"/>
+                        <div>
+                            <div class="fw-bold"><field name="tag"/> <field name="name"/></div>
+                            <div class="text-muted"><field name="breed_id"/> - <field name="sex"/></div>
+                            <div><field name="herd_id"/></div>
+                            <field name="reproductive_status" widget="badge"/>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_agri_animal_form" model="ir.ui.view">
+        <field name="name">mdv.agri.animal.form</field>
+        <field name="model">mdv.agri.animal</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <field name="status" widget="statusbar" options="{'clickable': '1'}"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_offspring" type="object" class="oe_stat_button" icon="fa-sitemap" string="Offspring"/>
+                    </div>
+                    <div class="alert alert-warning" role="alert" invisible="not withdrawal_until">
+                        <span>Withdrawal period: milk and meat are not for sale until</span> <field name="withdrawal_until" readonly="1" class="d-inline-block fw-bold"/>
+                    </div>
+                    <field name="image" widget="image" class="oe_avatar"/>
+                    <div class="oe_title">
+                        <label for="tag"/>
+                        <h1><field name="tag" placeholder="e.g. NW-1024"/></h1>
+                        <field name="name" placeholder="Name"/>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="species_id"/>
+                            <field name="breed_id"/>
+                            <field name="sex"/>
+                            <field name="birth_date"/>
+                            <field name="age_months"/>
+                            <field name="rfid"/>
+                            <field name="purpose"/>
+                        </group>
+                        <group>
+                            <field name="herd_id"/>
+                            <field name="farm_id"/>
+                            <field name="dam_id"/>
+                            <field name="sire_id"/>
+                            <field name="mdv_breeding_id" invisible="not mdv_breeding_id"/>
+                            <field name="weight_kg"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <group string="Reproduction and Milk" invisible="sex != 'female'">
+                        <group>
+                            <field name="reproductive_status"/>
+                            <field name="expected_birth_date"/>
+                            <field name="last_birth_date"/>
+                        </group>
+                        <group>
+                            <field name="lactation_status"/>
+                            <field name="days_in_milk"/>
+                            <field name="milk_7d"/>
+                            <field name="milk_total"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Breeding" name="breeding" invisible="sex != 'female'">
+                            <field name="breeding_ids" context="{'default_animal_id': id}">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="date"/>
+                                    <field name="method"/>
+                                    <field name="sire_id"/>
+                                    <field name="expected_birth_date"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Health" name="health">
+                            <field name="treatment_ids" context="{'default_animal_id': id}">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="date"/>
+                                    <field name="treatment_type"/>
+                                    <field name="diagnosis"/>
+                                    <field name="withdrawal_until"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Weights" name="weights">
+                            <field name="weight_log_ids">
+                                <list editable="bottom">
+                                    <field name="date"/>
+                                    <field name="weight_kg"/>
+                                    <field name="daily_gain_kg"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Milk" name="milk" invisible="sex != 'female'">
+                            <field name="milk_log_ids" context="{'default_animal_id': id}">
+                                <list editable="bottom">
+                                    <field name="date"/>
+                                    <field name="session"/>
+                                    <field name="quantity_l" sum="Total"/>
+                                    <field name="fat_pct"/>
+                                    <field name="protein_pct"/>
+                                    <field name="scc"/>
+                                    <field name="discarded"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Notes" name="notes">
+                            <field name="notes"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_agri_animal_search" model="ir.ui.view">
+        <field name="name">mdv.agri.animal.search</field>
+        <field name="model">mdv.agri.animal</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="tag"/>
+                <field name="name"/>
+                <field name="herd_id"/>
+                <field name="breed_id"/>
+                <filter name="active_animals" string="Active" domain="[('status', '=', 'active')]"/>
+                <filter name="lactating" string="Lactating" domain="[('lactation_status', '=', 'lactating')]"/>
+                <filter name="pregnant" string="Pregnant" domain="[('reproductive_status', '=', 'pregnant')]"/>
+                <filter name="withdrawal" string="In Withdrawal" domain="[('withdrawal_until', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                <group>
+                    <filter name="group_herd" string="Herd" context="{'group_by': 'herd_id'}"/>
+                    <filter name="group_species" string="Species" context="{'group_by': 'species_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_agri_animal" model="ir.actions.act_window">
+        <field name="name">Animals</field>
+        <field name="res_model">mdv.agri.animal</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="context">{'search_default_active_animals': 1}</field>
+    </record>
+
+    <!-- Breeding -->
+    <record id="view_agri_breeding_list" model="ir.ui.view">
+        <field name="name">mdv.agri.breeding.list</field>
+        <field name="model">mdv.agri.breeding</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="animal_id"/>
+                <field name="date"/>
+                <field name="method"/>
+                <field name="sire_id"/>
+                <field name="semen_ref" optional="hide"/>
+                <field name="pregnancy_check_date"/>
+                <field name="expected_birth_date"/>
+                <field name="state" widget="badge" decoration-success="state in ('pregnant', 'delivered')" decoration-danger="state in ('open', 'lost')"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_agri_breeding_form" model="ir.ui.view">
+        <field name="name">mdv.agri.breeding.form</field>
+        <field name="model">mdv.agri.breeding</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_confirm_pregnant" type="object" string="Confirm Pregnant" class="btn-primary" invisible="state != 'inseminated'"/>
+                    <button name="action_mark_open" type="object" string="Not Pregnant" invisible="state != 'inseminated'"/>
+                    <button name="action_register_birth" type="object" string="Register Birth" class="btn-primary" invisible="state not in ('inseminated', 'pregnant')"/>
+                    <button name="action_mark_lost" type="object" string="Pregnancy Lost" invisible="state != 'pregnant'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="inseminated,pregnant,delivered"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="animal_id"/>
+                            <field name="species_id"/>
+                            <field name="date"/>
+                            <field name="method"/>
+                            <field name="sire_id"/>
+                            <field name="semen_ref"/>
+                            <field name="semen_product_id"/>
+                        </group>
+                        <group>
+                            <field name="technician_id"/>
+                            <field name="pregnancy_check_date"/>
+                            <field name="expected_birth_date"/>
+                            <field name="birth_date" invisible="not birth_date"/>
+                        </group>
+                    </group>
+                    <field name="offspring_ids" invisible="not offspring_ids" readonly="1">
+                        <list>
+                            <field name="tag"/>
+                            <field name="name"/>
+                            <field name="sex"/>
+                            <field name="weight_kg"/>
+                        </list>
+                    </field>
+                    <field name="notes" placeholder="Notes"/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_agri_breeding_calendar" model="ir.ui.view">
+        <field name="name">mdv.agri.breeding.calendar</field>
+        <field name="model">mdv.agri.breeding</field>
+        <field name="arch" type="xml">
+            <calendar date_start="expected_birth_date" color="state" mode="month" string="Expected Births" quick_create="0">
+                <field name="animal_id"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="action_agri_breeding" model="ir.actions.act_window">
+        <field name="name">Breeding</field>
+        <field name="res_model">mdv.agri.breeding</field>
+        <field name="view_mode">list,form,calendar</field>
+    </record>
+
+    <record id="view_agri_birth_wizard_form" model="ir.ui.view">
+        <field name="name">mdv.agri.birth.wizard.form</field>
+        <field name="model">mdv.agri.birth.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    <field name="breeding_id" readonly="1"/>
+                    <field name="dam_id"/>
+                    <field name="birth_date"/>
+                </group>
+                <field name="line_ids">
+                    <list editable="bottom">
+                        <field name="tag"/>
+                        <field name="name"/>
+                        <field name="sex"/>
+                        <field name="weight_kg"/>
+                    </list>
+                </field>
+                <footer>
+                    <button name="action_register" type="object" string="Register" class="btn-primary"/>
+                    <button special="cancel" string="Cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vet treatments -->
+    <record id="view_agri_vet_treatment_list" model="ir.ui.view">
+        <field name="name">mdv.agri.vet.treatment.list</field>
+        <field name="model">mdv.agri.vet.treatment</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="state == 'cancelled'">
+                <field name="name"/>
+                <field name="date"/>
+                <field name="treatment_type"/>
+                <field name="animal_id"/>
+                <field name="herd_id"/>
+                <field name="diagnosis"/>
+                <field name="head_count" optional="show"/>
+                <field name="withdrawal_until" optional="show"/>
+                <field name="total_cost" sum="Total" optional="show"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="state" widget="badge" decoration-success="state == 'done'" decoration-info="state == 'planned'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_agri_vet_treatment_form" model="ir.ui.view">
+        <field name="name">mdv.agri.vet.treatment.form</field>
+        <field name="model">mdv.agri.vet.treatment</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_done" type="object" string="Done" class="btn-primary" invisible="state != 'planned'"/>
+                    <button name="action_create_bill" type="object" string="Create Vendor Bill" invisible="state != 'done' or bill_id or not vet_fee"/>
+                    <button name="action_cancel" type="object" string="Cancel" invisible="state != 'planned'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="planned,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="treatment_type" readonly="state != 'planned'"/>
+                            <field name="animal_id" readonly="state != 'planned'"/>
+                            <field name="herd_id" readonly="state != 'planned'"/>
+                            <field name="head_count"/>
+                            <field name="date" readonly="state != 'planned'"/>
+                            <field name="schedule_id" invisible="not schedule_id"/>
+                        </group>
+                        <group>
+                            <field name="diagnosis"/>
+                            <field name="vet_partner_id"/>
+                            <field name="vet_fee"/>
+                            <field name="withdrawal_days"/>
+                            <field name="withdrawal_until"/>
+                            <field name="quarantine"/>
+                            <field name="bill_id" invisible="not bill_id"/>
+                            <field name="total_cost" invisible="state != 'done'"/>
+                            <field name="company_id" invisible="1"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Medicines" name="medicines">
+                            <field name="medicine_line_ids" readonly="state != 'planned'">
+                                <list editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="quantity"/>
+                                    <field name="uom_id"/>
+                                    <field name="dosage"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Symptoms and Notes" name="notes">
+                            <field name="symptoms" placeholder="Symptoms"/>
+                            <field name="notes" placeholder="Notes"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_agri_vet_treatment_calendar" model="ir.ui.view">
+        <field name="name">mdv.agri.vet.treatment.calendar</field>
+        <field name="model">mdv.agri.vet.treatment</field>
+        <field name="arch" type="xml">
+            <calendar date_start="date" color="treatment_type" mode="month" string="Vet Calendar" quick_create="0">
+                <field name="animal_id"/>
+                <field name="herd_id"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="view_agri_vet_treatment_search" model="ir.ui.view">
+        <field name="name">mdv.agri.vet.treatment.search</field>
+        <field name="model">mdv.agri.vet.treatment</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="animal_id"/>
+                <field name="herd_id"/>
+                <field name="diagnosis"/>
+                <filter name="planned" string="Planned" domain="[('state', '=', 'planned')]"/>
+                <filter name="vaccinations" string="Vaccinations" domain="[('treatment_type', '=', 'vaccination')]"/>
+                <group>
+                    <filter name="group_type" string="Type" context="{'group_by': 'treatment_type'}"/>
+                    <filter name="group_herd" string="Herd" context="{'group_by': 'herd_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_agri_vet_treatment" model="ir.actions.act_window">
+        <field name="name">Vet Treatments</field>
+        <field name="res_model">mdv.agri.vet.treatment</field>
+        <field name="view_mode">list,form,calendar</field>
+    </record>
+
+    <record id="view_agri_vaccination_schedule_list" model="ir.ui.view">
+        <field name="name">mdv.agri.vaccination.schedule.list</field>
+        <field name="model">mdv.agri.vaccination.schedule</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="name"/>
+                <field name="species_id"/>
+                <field name="herd_type"/>
+                <field name="product_id"/>
+                <field name="dose_per_head"/>
+                <field name="first_age_days"/>
+                <field name="repeat_days"/>
+                <field name="withdrawal_days"/>
+                <field name="lead_days"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_agri_vaccination_schedule" model="ir.actions.act_window">
+        <field name="name">Vaccination Schedules</field>
+        <field name="res_model">mdv.agri.vaccination.schedule</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <!-- Production logs -->
+    <record id="view_agri_milk_log_list" model="ir.ui.view">
+        <field name="name">mdv.agri.milk.log.list</field>
+        <field name="model">mdv.agri.milk.log</field>
+        <field name="arch" type="xml">
+            <list editable="top" decoration-muted="discarded">
+                <header>
+                    <button name="action_post_to_stock" type="object" string="Receive in Stock"/>
+                </header>
+                <field name="date"/>
+                <field name="session"/>
+                <field name="animal_id"/>
+                <field name="herd_id"/>
+                <field name="quantity_l" sum="Total"/>
+                <field name="fat_pct" optional="show"/>
+                <field name="protein_pct" optional="show"/>
+                <field name="scc" optional="show"/>
+                <field name="in_withdrawal" optional="show"/>
+                <field name="discarded"/>
+                <field name="posted" optional="show"/>
+                <field name="company_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_agri_milk_log_graph" model="ir.ui.view">
+        <field name="name">mdv.agri.milk.log.graph</field>
+        <field name="model">mdv.agri.milk.log</field>
+        <field name="arch" type="xml">
+            <graph string="Milk Yield" type="line" sample="1">
+                <field name="date" interval="day"/>
+                <field name="quantity_l" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_agri_milk_log_pivot" model="ir.ui.view">
+        <field name="name">mdv.agri.milk.log.pivot</field>
+        <field name="model">mdv.agri.milk.log</field>
+        <field name="arch" type="xml">
+            <pivot string="Milk Yield" sample="1">
+                <field name="animal_id" type="row"/>
+                <field name="date" interval="week" type="col"/>
+                <field name="quantity_l" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_agri_milk_log_search" model="ir.ui.view">
+        <field name="name">mdv.agri.milk.log.search</field>
+        <field name="model">mdv.agri.milk.log</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="animal_id"/>
+                <field name="herd_id"/>
+                <filter name="not_posted" string="Not in Stock" domain="[('posted', '=', False), ('discarded', '=', False)]"/>
+                <filter name="discarded" string="Discarded" domain="[('discarded', '=', True)]"/>
+                <filter name="date" string="Date" date="date"/>
+                <group>
+                    <filter name="group_animal" string="Animal" context="{'group_by': 'animal_id'}"/>
+                    <filter name="group_date" string="Day" context="{'group_by': 'date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_agri_milk_log" model="ir.actions.act_window">
+        <field name="name">Milk Yield</field>
+        <field name="res_model">mdv.agri.milk.log</field>
+        <field name="view_mode">list,graph,pivot</field>
+    </record>
+
+    <record id="view_agri_egg_log_list" model="ir.ui.view">
+        <field name="name">mdv.agri.egg.log.list</field>
+        <field name="model">mdv.agri.egg.log</field>
+        <field name="arch" type="xml">
+            <list editable="top">
+                <header>
+                    <button name="action_post_to_stock" type="object" string="Receive in Stock"/>
+                </header>
+                <field name="date"/>
+                <field name="herd_id"/>
+                <field name="birds_count"/>
+                <field name="eggs_collected" sum="Total"/>
+                <field name="eggs_broken" sum="Total"/>
+                <field name="eggs_saleable" sum="Total"/>
+                <field name="lay_rate_pct"/>
+                <field name="avg_egg_weight_g" optional="show"/>
+                <field name="posted" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_agri_egg_log_graph" model="ir.ui.view">
+        <field name="name">mdv.agri.egg.log.graph</field>
+        <field name="model">mdv.agri.egg.log</field>
+        <field name="arch" type="xml">
+            <graph string="Egg Production" type="line" sample="1">
+                <field name="date" interval="day"/>
+                <field name="eggs_collected" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_agri_egg_log" model="ir.actions.act_window">
+        <field name="name">Egg Production</field>
+        <field name="res_model">mdv.agri.egg.log</field>
+        <field name="view_mode">list,graph</field>
+    </record>
+
+    <record id="view_agri_feed_log_list" model="ir.ui.view">
+        <field name="name">mdv.agri.feed.log.list</field>
+        <field name="model">mdv.agri.feed.log</field>
+        <field name="arch" type="xml">
+            <list editable="top">
+                <header>
+                    <button name="action_done" type="object" string="Consume from Stock"/>
+                </header>
+                <field name="date" readonly="state == 'done'"/>
+                <field name="herd_id" readonly="state == 'done'"/>
+                <field name="animal_id" optional="hide" readonly="state == 'done'"/>
+                <field name="product_id" readonly="state == 'done'"/>
+                <field name="quantity" sum="Total" readonly="state == 'done'"/>
+                <field name="uom_id"/>
+                <field name="unit_cost" optional="show"/>
+                <field name="amount" sum="Total"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="from_ration" optional="hide"/>
+                <field name="state" widget="badge" decoration-success="state == 'done'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_agri_feed_log" model="ir.actions.act_window">
+        <field name="name">Feed Consumption</field>
+        <field name="res_model">mdv.agri.feed.log</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <record id="view_agri_mortality_list" model="ir.ui.view">
+        <field name="name">mdv.agri.mortality.list</field>
+        <field name="model">mdv.agri.mortality</field>
+        <field name="arch" type="xml">
+            <list editable="top">
+                <field name="date"/>
+                <field name="herd_id"/>
+                <field name="animal_id"/>
+                <field name="count" sum="Total"/>
+                <field name="cause"/>
+                <field name="notes"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_agri_mortality" model="ir.actions.act_window">
+        <field name="name">Mortality</field>
+        <field name="res_model">mdv.agri.mortality</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <record id="view_agri_species_form" model="ir.ui.view">
+        <field name="name">mdv.agri.animal.species.form</field>
+        <field name="model">mdv.agri.animal.species</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="kind"/>
+                            <field name="gestation_days"/>
+                        </group>
+                        <group>
+                            <field name="produces_milk"/>
+                            <field name="produces_eggs"/>
+                        </group>
+                    </group>
+                    <field name="breed_ids">
+                        <list editable="bottom">
+                            <field name="name"/>
+                            <field name="purpose"/>
+                        </list>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_agri_species_list" model="ir.ui.view">
+        <field name="name">mdv.agri.animal.species.list</field>
+        <field name="model">mdv.agri.animal.species</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="kind"/>
+                <field name="gestation_days"/>
+                <field name="produces_milk"/>
+                <field name="produces_eggs"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_agri_species" model="ir.actions.act_window">
+        <field name="name">Species and Breeds</field>
+        <field name="res_model">mdv.agri.animal.species</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

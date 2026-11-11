@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_agri_crop_plan_list" model="ir.ui.view">
+        <field name="name">mdv.agri.crop.plan.list</field>
+        <field name="model">mdv.agri.crop.plan</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="season_id"/>
+                <field name="farm_id" optional="show"/>
+                <field name="field_id"/>
+                <field name="crop_id"/>
+                <field name="variety_id" optional="hide"/>
+                <field name="area_ha" sum="Total"/>
+                <field name="sowing_date"/>
+                <field name="expected_harvest_date" optional="show"/>
+                <field name="budget_total" sum="Total" optional="show"/>
+                <field name="direct_cost" sum="Total"/>
+                <field name="harvested_qty" sum="Total" optional="show"/>
+                <field name="yield_per_ha" optional="show"/>
+                <field name="revenue" sum="Total" optional="hide"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="state" widget="badge" decoration-success="state == 'growing'" decoration-info="state == 'confirmed'" decoration-warning="state == 'harvested'" decoration-muted="state in ('closed', 'cancelled')"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_agri_crop_plan_kanban" model="ir.ui.view">
+        <field name="name">mdv.agri.crop.plan.kanban</field>
+        <field name="model">mdv.agri.crop.plan</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state">
+                <field name="currency_id"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex">
+                            <field name="crop_id" class="fw-bold"/>
+                            <field name="name" class="ms-auto text-muted small"/>
+                        </div>
+                        <div><field name="field_id"/> - <field name="area_ha"/> ha</div>
+                        <div class="text-muted small">Sowing <field name="sowing_date"/>, harvest <field name="expected_harvest_date"/></div>
+                        <div class="small">Cost <field name="direct_cost" widget="monetary"/> / budget <field name="budget_total" widget="monetary"/></div>
+                        <footer>
+                            <field name="season_id" class="text-muted small"/>
+                            <field name="responsible_id" widget="many2one_avatar_user" class="ms-auto"/>
+                        </footer>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_agri_crop_plan_form" model="ir.ui.view">
+        <field name="name">mdv.agri.crop.plan.form</field>
+        <field name="model">mdv.agri.crop.plan</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_confirm" type="object" string="Confirm Plan" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_start" type="object" string="Start Growing" invisible="state != 'confirmed'"/>
+                    <button name="action_mark_harvested" type="object" string="Harvest Finished" class="btn-primary" invisible="state != 'growing'"/>
+                    <button name="action_close" type="object" string="Close" invisible="state != 'harvested'" groups="mdv_agriculture_suite.group_agri_manager"/>
+                    <button name="action_purchase_materials" type="object" string="Purchase Missing Materials" invisible="state not in ('confirmed', 'growing')"/>
+                    <button name="action_print_cost_sheet" type="object" string="Job Cost Sheet" invisible="state == 'draft'"/>
+                    <button name="action_draft" type="object" string="Reset to Draft" invisible="state not in ('confirmed', 'cancelled')"/>
+                    <button name="action_cancel" type="object" string="Cancel" invisible="state not in ('draft', 'confirmed', 'growing')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,growing,harvested,closed"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_activities" type="object" class="oe_stat_button" icon="fa-tasks">
+                            <field name="field_activity_count" widget="statinfo" string="Activities"/>
+                        </button>
+                        <button name="action_view_scouting" type="object" class="oe_stat_button" icon="fa-bug">
+                            <field name="scouting_count" widget="statinfo" string="Scouting"/>
+                        </button>
+                        <button name="action_view_harvests" type="object" class="oe_stat_button" icon="fa-archive">
+                            <field name="harvest_count" widget="statinfo" string="Harvests"/>
+                        </button>
+                        <button name="action_view_costs" type="object" class="oe_stat_button" icon="fa-money">
+                            <field name="direct_cost" widget="statinfo" string="Cost"/>
+                        </button>
+                        <button name="action_view_sale_orders" type="object" class="oe_stat_button" icon="fa-dollar" invisible="not sale_order_count">
+                            <field name="sale_order_count" widget="statinfo" string="Sales"/>
+                        </button>
+                        <button name="action_view_purchases" type="object" class="oe_stat_button" icon="fa-shopping-cart" invisible="not purchase_count">
+                            <field name="purchase_count" widget="statinfo" string="Purchases"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="season_id" readonly="state not in ('draft', 'confirmed')"/>
+                            <field name="field_id" readonly="state != 'draft'"/>
+                            <field name="farm_id"/>
+                            <field name="crop_id" readonly="state != 'draft'"/>
+                            <field name="variety_id" readonly="state != 'draft'"/>
+                            <field name="area_ha" readonly="state not in ('draft', 'confirmed')"/>
+                            <field name="responsible_id" widget="many2one_avatar_user"/>
+                        </group>
+                        <group>
+                            <field name="sowing_date" readonly="state not in ('draft', 'confirmed')"/>
+                            <field name="actual_sowing_date"/>
+                            <field name="growing_days"/>
+                            <field name="expected_harvest_date"/>
+                            <field name="harvest_end_date" invisible="not harvest_end_date"/>
+                            <label for="expected_yield_per_ha"/>
+                            <div class="o_row">
+                                <field name="expected_yield_per_ha"/>
+                                <field name="yield_uom_id" options="{'no_open': True}"/>
+                                <span>per ha</span>
+                            </div>
+                            <field name="expected_yield"/>
+                            <field name="request_id" invisible="not request_id"/>
+                            <field name="analytic_account_id" groups="analytic.group_analytic_accounting"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <group string="In the Field" invisible="state in ('draft', 'cancelled')">
+                        <group>
+                            <field name="days_since_sowing"/>
+                            <field name="progress_pct" widget="progressbar"/>
+                            <field name="open_scouting_count"/>
+                        </group>
+                        <group>
+                            <field name="gdd_accumulated"/>
+                            <field name="rain_since_sowing_mm"/>
+                            <field name="irrigation_m3"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Job Cost Sheet" name="cost_sheet">
+                            <group>
+                                <group string="Actual Cost">
+                                    <field name="material_cost"/>
+                                    <field name="labour_cost"/>
+                                    <field name="machine_cost"/>
+                                    <field name="overhead_cost"/>
+                                    <field name="other_cost"/>
+                                    <field name="total_cost" class="fw-bold"/>
+                                </group>
+                                <group string="Budget and Results">
+                                    <field name="budget_total"/>
+                                    <field name="budget_variance" decoration-danger="budget_variance &lt; 0" decoration-success="budget_variance &gt;= 0"/>
+                                    <field name="budget_used_pct" widget="progressbar"/>
+                                    <field name="cost_per_ha"/>
+                                    <field name="harvested_qty"/>
+                                    <field name="yield_per_ha"/>
+                                    <field name="yield_gap_pct"/>
+                                    <field name="cost_per_unit"/>
+                                    <field name="revenue"/>
+                                    <field name="margin" decoration-danger="margin &lt; 0" decoration-success="margin &gt; 0"/>
+                                </group>
+                            </group>
+                            <separator string="Budget"/>
+                            <field name="budget_line_ids">
+                                <list editable="bottom">
+                                    <field name="cost_type"/>
+                                    <field name="product_id"/>
+                                    <field name="name"/>
+                                    <field name="quantity"/>
+                                    <field name="unit_cost"/>
+                                    <field name="amount" sum="Total"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                            <button name="action_regenerate_budget" type="object" string="Rebuild Budget from Template" class="btn-link" invisible="state in ('closed', 'cancelled')"/>
+                            <button name="action_add_lease_cost" type="object" string="Book Land Lease Cost" class="btn-link" invisible="state in ('draft', 'cancelled')"/>
+                        </page>
+                        <page string="Activities" name="activities">
+                            <field name="field_activity_ids" context="{'default_plan_id': id}">
+                                <list decoration-muted="state == 'cancelled'" decoration-success="state == 'done'">
+                                    <field name="date_planned"/>
+                                    <field name="name"/>
+                                    <field name="activity_type"/>
+                                    <field name="date_done"/>
+                                    <field name="total_cost" sum="Total"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Harvests" name="harvests">
+                            <field name="harvest_ids" context="{'default_plan_id': id}">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="date"/>
+                                    <field name="quantity" sum="Total"/>
+                                    <field name="uom_id"/>
+                                    <field name="grade_id"/>
+                                    <field name="lot_id"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Actual Costs" name="costs">
+                            <field name="cost_line_ids" readonly="1">
+                                <list>
+                                    <field name="date"/>
+                                    <field name="cost_type"/>
+                                    <field name="name"/>
+                                    <field name="activity_id"/>
+                                    <field name="quantity"/>
+                                    <field name="unit_label"/>
+                                    <field name="unit_cost"/>
+                                    <field name="amount" sum="Total"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Notes" name="notes">
+                            <field name="notes"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_agri_crop_plan_calendar" model="ir.ui.view">
+        <field name="name">mdv.agri.crop.plan.calendar</field>
+        <field name="model">mdv.agri.crop.plan</field>
+        <field name="arch" type="xml">
+            <calendar date_start="sowing_date" date_stop="expected_harvest_date" color="crop_id" mode="month" string="Crop Calendar">
+                <field name="field_id"/>
+                <field name="area_ha"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="view_agri_crop_plan_pivot" model="ir.ui.view">
+        <field name="name">mdv.agri.crop.plan.pivot</field>
+        <field name="model">mdv.agri.crop.plan</field>
+        <field name="arch" type="xml">
+            <pivot string="Yield Analysis" sample="1">
+                <field name="crop_id" type="row"/>
+                <field name="season_id" type="col"/>
+                <field name="area_ha" type="measure"/>
+                <field name="harvested_qty" type="measure"/>
+                <field name="direct_cost" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_agri_crop_plan_graph" model="ir.ui.view">
+        <field name="name">mdv.agri.crop.plan.graph</field>
+        <field name="model">mdv.agri.crop.plan</field>
+        <field name="arch" type="xml">
+            <graph string="Yield per ha" type="bar" sample="1">
+                <field name="field_id"/>
+                <field name="yield_per_ha" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_agri_crop_plan_search" model="ir.ui.view">
+        <field name="name">mdv.agri.crop.plan.search</field>
+        <field name="model">mdv.agri.crop.plan</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="crop_id"/>
+                <field name="field_id"/>
+                <field name="farm_id"/>
+                <field name="season_id"/>
+                <filter name="active_plans" string="Planned or Growing" domain="[('state', 'in', ('confirmed', 'growing'))]"/>
+                <filter name="draft" string="Draft Scenarios" domain="[('state', '=', 'draft')]"/>
+                <filter name="harvested" string="Harvested" domain="[('state', 'in', ('harvested', 'closed'))]"/>
+                <separator/>
+                <filter name="my" string="My Plans" domain="[('responsible_id', '=', uid)]"/>
+                <group>
+                    <filter name="group_season" string="Season" context="{'group_by': 'season_id'}"/>
+                    <filter name="group_crop" string="Crop" context="{'group_by': 'crop_id'}"/>
+                    <filter name="group_farm" string="Farm" context="{'group_by': 'farm_id'}"/>
+                    <filter name="group_field" string="Field" context="{'group_by': 'field_id'}"/>
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_agri_crop_plan" model="ir.actions.act_window">
+        <field name="name">Crop Plans</field>
+        <field name="res_model">mdv.agri.crop.plan</field>
+        <field name="view_mode">list,kanban,form,calendar,pivot,graph</field>
+        <field name="context">{'search_default_active_plans': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Plan a crop on a field for a season</p>
+            <p>Confirming the plan creates its field activities and budget from the crop template.</p>
+        </field>
+    </record>
+
+    <record id="action_agri_yield_analysis" model="ir.actions.act_window">
+        <field name="name">Yield Analysis</field>
+        <field name="res_model">mdv.agri.crop.plan</field>
+        <field name="view_mode">pivot,graph,list</field>
+        <field name="context">{'search_default_harvested': 1}</field>
+    </record>
+</odoo>

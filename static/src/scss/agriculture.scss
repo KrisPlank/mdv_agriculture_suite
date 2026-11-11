@@ -1,0 +1,53 @@
+.o_agri_map_field .o_agri_map {
+    min-height: 240px;
+    z-index: 0;
+}
+.o_agri_map_label {
+    background: rgba(255, 255, 255, 0.85);
+    border: 0;
+    box-shadow: none;
+    font-weight: 600;
+    font-size: 11px;
+}
+.o_agri_dashboard {
+    .o_agri_kpi {
+        border-radius: 10px;
+        border: 1px solid $border-color;
+        padding: 14px 16px;
+        background: $o-view-background-color;
+        cursor: pointer;
+        height: 100%;
+        .o_agri_kpi_value {
+            font-size: 26px;
+            font-weight: 700;
+        }
+        .o_agri_kpi_label {
+            color: $text-muted;
+            font-size: 13px;
+        }
+        &:hover {
+            border-color: $primary;
+        }
+    }
+    .o_agri_sev_critical { background-color: #c62828; }
+    .o_agri_sev_high { background-color: #ef6c00; }
+    .o_agri_sev_medium { background-color: #f9a825; }
+    .o_agri_sev_low { background-color: #2e7d32; }
+    .o_agri_bar {
+        height: 8px;
+        border-radius: 4px;
+        background-color: #e0e0e0;
+        > div {
+            height: 8px;
+            border-radius: 4px;
+            background-color: #2e7d32;
+        }
+        > div.o_agri_over {
+            background-color: #c62828;
+        }
+    }
+}
+.o_field_widget.o_field_mdv_agri_map {
+    display: block;
+    width: 100%;
+}

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="mdv_agriculture_suite.Dashboard">
+        <div class="o_agri_dashboard o_action h-100 overflow-auto p-3 bg-view">
+            <t t-if="state.data">
+                <div class="d-flex align-items-center mb-3">
+                    <h2 class="m-0">Farm Dashboard</h2>
+                    <button class="btn btn-secondary btn-sm ms-auto" t-on-click="() => this.load()">Refresh</button>
+                </div>
+                <div class="row row-cols-2 row-cols-md-3 row-cols-xl-5 g-3 mb-3">
+                    <t t-foreach="kpis" t-as="kpi" t-key="kpi_index">
+                        <div class="col">
+                            <div class="o_agri_kpi" t-on-click="() => this.open(kpi.action)">
+                                <div class="o_agri_kpi_value" t-esc="kpi.value"/>
+                                <div class="o_agri_kpi_label" t-esc="kpi.label"/>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+                <div class="row g-3">
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                            <div class="card-header fw-bold">Crops this season - budget vs actual</div>
+                            <div class="card-body">
+                                <div t-if="!state.data.crops.length" class="text-muted">No crop plan in the current season.</div>
+                                <t t-foreach="state.data.crops" t-as="row" t-key="row.crop">
+                                    <div class="mb-3">
+                                        <div class="d-flex">
+                                            <strong t-esc="row.crop"/>
+                                            <span class="ms-2 text-muted"><t t-esc="row.area.toFixed(2)"/> ha</span>
+                                            <span class="ms-2 text-muted" t-if="row.harvested">- harvested <t t-esc="row.harvested.toLocaleString()"/> <t t-esc="row.uom"/></span>
+                                            <span class="ms-auto"><t t-esc="money(row.actual)"/> / <t t-esc="money(row.budget)"/></span>
+                                        </div>
+                                        <div class="o_agri_bar mt-1">
+                                            <div t-att-class="row.actual &gt; row.budget ? 'o_agri_over' : ''" t-attf-style="width: {{pct(row.budget, row.actual)}}%;"/>
+                                        </div>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                            <div class="card-header fw-bold">Field work - next 7 days</div>
+                            <ul class="list-group list-group-flush">
+                                <li t-if="!state.data.activities.length" class="list-group-item text-muted">Nothing planned.</li>
+                                <t t-foreach="state.data.activities" t-as="act" t-key="act.id">
+                                    <li class="list-group-item d-flex" style="cursor: pointer;" t-on-click="() => this.openRecord('mdv.agri.activity', act.id)">
+                                        <span t-att-class="act.overdue ? 'text-danger fw-bold me-2' : 'me-2'" t-esc="act.date"/>
+                                        <span t-esc="act.name"/>
+                                        <span class="ms-auto text-muted"><t t-esc="act.type"/> - <t t-esc="act.field"/></span>
+                                    </li>
+                                </t>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                            <div class="card-header fw-bold">Weather alerts</div>
+                            <ul class="list-group list-group-flush">
+                                <li t-if="!state.data.alerts.length" class="list-group-item text-muted">No frost, heavy rain, heat or wind alert ahead.</li>
+                                <t t-foreach="state.data.alerts" t-as="alert" t-key="alert.id">
+                                    <li class="list-group-item d-flex">
+                                        <span class="me-2 fw-bold" t-esc="alert.date"/>
+                                        <span t-esc="alert.farm"/>
+                                        <span class="badge text-bg-warning ms-2" t-if="alert.forecast">forecast</span>
+                                        <span class="ms-auto text-danger" t-esc="alert.summary"/>
+                                    </li>
+                                </t>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                            <div class="card-header fw-bold">Open scouting</div>
+                            <ul class="list-group list-group-flush">
+                                <li t-if="!state.data.scouting.length" class="list-group-item text-muted">No open pest or disease report.</li>
+                                <t t-foreach="state.data.scouting" t-as="sc" t-key="sc.id">
+                                    <li class="list-group-item d-flex align-items-center" style="cursor: pointer;" t-on-click="() => this.openRecord('mdv.agri.scouting', sc.id)">
+                                        <span t-attf-class="badge text-white me-2 o_agri_sev_{{sc.severity}}" t-esc="sc.severity"/>
+                                        <span t-esc="sc.pest"/>
+                                        <span class="ms-auto text-muted"><t t-esc="sc.field"/> - <t t-esc="sc.name"/></span>
+                                    </li>
+                                </t>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

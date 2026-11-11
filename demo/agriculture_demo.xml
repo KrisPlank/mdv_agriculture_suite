@@ -1,0 +1,656 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="partner_riverside" model="res.partner">
+        <field name="name">Riverside Grain Co</field>
+        <field name="is_company" eval="True"/>
+        <field name="email">buying@riverside-grain.example.com</field>
+        <field name="city">Ames</field>
+    </record>
+    <record id="partner_greenleaf" model="res.partner">
+        <field name="name">GreenLeaf Agro Supplies</field>
+        <field name="is_company" eval="True"/>
+        <field name="email">orders@greenleaf-agro.example.com</field>
+        <field name="city">Des Moines</field>
+    </record>
+    <record id="partner_vet" model="res.partner">
+        <field name="name">Dr. Casey Quinn Veterinary</field>
+        <field name="is_company" eval="True"/>
+        <field name="email">casey.quinn@quinn-vet.example.com</field>
+    </record>
+    <record id="partner_morgan_farm" model="res.partner">
+        <field name="name">Morgan Family Farm</field>
+        <field name="is_company" eval="True"/>
+        <field name="email">jamie@morgan-family-farm.example.com</field>
+        <field name="city">Ankeny</field>
+    </record>
+    <record id="partner_pinecrest" model="res.partner">
+        <field name="name">Pinecrest Foods</field>
+        <field name="is_company" eval="True"/>
+        <field name="email">sourcing@pinecrest-foods.example.com</field>
+    </record>
+    <record id="emp_alex" model="hr.employee">
+        <field name="name">Alex Morgan</field>
+        <field name="job_title">Farm Manager</field>
+        <field name="hourly_cost">32</field>
+    </record>
+    <record id="emp_jordan" model="hr.employee">
+        <field name="name">Jordan Lee</field>
+        <field name="job_title">Tractor Driver</field>
+        <field name="hourly_cost">22</field>
+    </record>
+    <record id="emp_sam" model="hr.employee">
+        <field name="name">Sam Rivera</field>
+        <field name="job_title">Field Hand</field>
+        <field name="hourly_cost">18</field>
+    </record>
+    <record id="emp_taylor" model="hr.employee">
+        <field name="name">Taylor Brooks</field>
+        <field name="job_title">Herdsman</field>
+        <field name="hourly_cost">20</field>
+    </record>
+    <record id="prod_wheat_seed" model="product.product">
+        <field name="name">Wheat Seed (certified)</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="uom_id" ref="uom.product_uom_kgm"/>
+        <field name="standard_price">0.65</field>
+        <field name="list_price">0.9</field>
+        <field name="tracking">none</field>
+        <field name="seller_ids" eval="[(0, 0, {'partner_id': ref('partner_greenleaf'), 'price': 0.65})]"/>
+    </record>
+    <record id="prod_corn_seed" model="product.product">
+        <field name="name">Corn Seed (hybrid)</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="uom_id" ref="uom.product_uom_kgm"/>
+        <field name="standard_price">4.2</field>
+        <field name="list_price">6.0</field>
+        <field name="tracking">none</field>
+        <field name="seller_ids" eval="[(0, 0, {'partner_id': ref('partner_greenleaf'), 'price': 4.2})]"/>
+    </record>
+    <record id="prod_tomato_seedling" model="product.product">
+        <field name="name">Tomato Seedlings</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="standard_price">0.18</field>
+        <field name="list_price">0.3</field>
+        <field name="tracking">none</field>
+    </record>
+    <record id="prod_urea" model="product.product">
+        <field name="name">Urea 46-0-0</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="uom_id" ref="uom.product_uom_kgm"/>
+        <field name="standard_price">0.48</field>
+        <field name="list_price">0.7</field>
+        <field name="tracking">none</field>
+        <field name="seller_ids" eval="[(0, 0, {'partner_id': ref('partner_greenleaf'), 'price': 0.48})]"/>
+    </record>
+    <record id="prod_npk" model="product.product">
+        <field name="name">NPK 15-15-15</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="uom_id" ref="uom.product_uom_kgm"/>
+        <field name="standard_price">0.62</field>
+        <field name="list_price">0.9</field>
+        <field name="tracking">none</field>
+        <field name="seller_ids" eval="[(0, 0, {'partner_id': ref('partner_greenleaf'), 'price': 0.62})]"/>
+    </record>
+    <record id="prod_herbicide" model="product.product">
+        <field name="name">Glyphosate Herbicide</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="uom_id" ref="uom.product_uom_litre"/>
+        <field name="standard_price">6.5</field>
+        <field name="list_price">9.0</field>
+        <field name="tracking">none</field>
+        <field name="seller_ids" eval="[(0, 0, {'partner_id': ref('partner_greenleaf'), 'price': 6.5})]"/>
+    </record>
+    <record id="prod_fungicide" model="product.product">
+        <field name="name">Copper Fungicide</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="uom_id" ref="uom.product_uom_litre"/>
+        <field name="standard_price">11.0</field>
+        <field name="list_price">15.0</field>
+        <field name="tracking">none</field>
+        <field name="seller_ids" eval="[(0, 0, {'partner_id': ref('partner_greenleaf'), 'price': 11.0})]"/>
+    </record>
+    <record id="prod_insecticide" model="product.product">
+        <field name="name">Pyrethrin Insecticide</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="uom_id" ref="uom.product_uom_litre"/>
+        <field name="standard_price">14.0</field>
+        <field name="list_price">19.0</field>
+        <field name="tracking">none</field>
+        <field name="seller_ids" eval="[(0, 0, {'partner_id': ref('partner_greenleaf'), 'price': 14.0})]"/>
+    </record>
+    <record id="prod_wheat_grain" model="product.product">
+        <field name="name">Wheat Grain</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="uom_id" ref="uom.product_uom_kgm"/>
+        <field name="standard_price">0.16</field>
+        <field name="list_price">0.24</field>
+        <field name="tracking">lot</field>
+    </record>
+    <record id="prod_corn_grain" model="product.product">
+        <field name="name">Corn Grain</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="uom_id" ref="uom.product_uom_kgm"/>
+        <field name="standard_price">0.13</field>
+        <field name="list_price">0.2</field>
+        <field name="tracking">lot</field>
+    </record>
+    <record id="prod_tomatoes" model="product.product">
+        <field name="name">Fresh Tomatoes</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="uom_id" ref="uom.product_uom_kgm"/>
+        <field name="standard_price">0.55</field>
+        <field name="list_price">1.1</field>
+        <field name="tracking">lot</field>
+    </record>
+    <record id="prod_milk" model="product.product">
+        <field name="name">Raw Milk</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="uom_id" ref="uom.product_uom_litre"/>
+        <field name="standard_price">0.32</field>
+        <field name="list_price">0.45</field>
+        <field name="tracking">none</field>
+    </record>
+    <record id="prod_eggs" model="product.product">
+        <field name="name">Fresh Eggs</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="standard_price">0.09</field>
+        <field name="list_price">0.18</field>
+        <field name="tracking">none</field>
+    </record>
+    <record id="prod_dairy_feed" model="product.product">
+        <field name="name">Dairy Concentrate</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="uom_id" ref="uom.product_uom_kgm"/>
+        <field name="standard_price">0.38</field>
+        <field name="list_price">0.5</field>
+        <field name="tracking">none</field>
+    </record>
+    <record id="prod_hay" model="product.product">
+        <field name="name">Alfalfa Hay</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="uom_id" ref="uom.product_uom_kgm"/>
+        <field name="standard_price">0.18</field>
+        <field name="list_price">0.25</field>
+        <field name="tracking">none</field>
+    </record>
+    <record id="prod_layer_mash" model="product.product">
+        <field name="name">Layer Mash</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="uom_id" ref="uom.product_uom_kgm"/>
+        <field name="standard_price">0.42</field>
+        <field name="list_price">0.55</field>
+        <field name="tracking">none</field>
+    </record>
+    <record id="prod_goat_feed" model="product.product">
+        <field name="name">Goat Pellets</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="uom_id" ref="uom.product_uom_kgm"/>
+        <field name="standard_price">0.4</field>
+        <field name="list_price">0.52</field>
+        <field name="tracking">none</field>
+    </record>
+    <record id="prod_vaccine_clostridial" model="product.product">
+        <field name="name">Clostridial Vaccine (dose)</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="standard_price">1.2</field>
+        <field name="list_price">2.0</field>
+        <field name="tracking">none</field>
+    </record>
+    <record id="prod_vaccine_nd" model="product.product">
+        <field name="name">Newcastle Disease Vaccine (dose)</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="standard_price">0.03</field>
+        <field name="list_price">0.05</field>
+        <field name="tracking">none</field>
+    </record>
+    <record id="prod_antibiotic" model="product.product">
+        <field name="name">Mastitis Tube (intramammary)</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="standard_price">4.5</field>
+        <field name="list_price">6.0</field>
+        <field name="tracking">none</field>
+    </record>
+    <record id="prod_semen" model="product.product">
+        <field name="name">Holstein Semen Straw</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True"/>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="standard_price">28.0</field>
+        <field name="list_price">35.0</field>
+        <field name="tracking">none</field>
+    </record>
+    <record id="eq_tractor" model="maintenance.equipment">
+        <field name="name">Tractor 120 hp</field>
+        <field name="mdv_agri_is_farm_machine" eval="True"/>
+        <field name="mdv_agri_hourly_rate">38</field>
+        <field name="mdv_agri_service_hours">250</field>
+    </record>
+    <record id="eq_sprayer" model="maintenance.equipment">
+        <field name="name">Boom Sprayer 24 m</field>
+        <field name="mdv_agri_is_farm_machine" eval="True"/>
+        <field name="mdv_agri_hourly_rate">25</field>
+        <field name="mdv_agri_service_hours">0</field>
+    </record>
+    <record id="eq_combine" model="maintenance.equipment">
+        <field name="name">Combine Harvester</field>
+        <field name="mdv_agri_is_farm_machine" eval="True"/>
+        <field name="mdv_agri_hourly_rate">140</field>
+        <field name="mdv_agri_service_hours">300</field>
+    </record>
+    <record id="farm_northwind" model="mdv.agri.farm">
+        <field name="name">Northwind Farms</field>
+        <field name="code">NWF</field>
+        <field name="farm_type">mixed</field>
+        <field name="street">1450 280th Street</field>
+        <field name="city">Madrid</field>
+        <field name="zip">50156</field>
+        <field name="manager_id" ref="base.user_admin"/>
+        <field name="country_id" ref="base.us"/>
+        <field name="latitude">41.948</field>
+        <field name="longitude">-93.752</field>
+        <field name="warehouse_id" ref="stock.warehouse0"/>
+        <field name="location_id" ref="stock.stock_location_stock"/>
+    </record>
+    <record id="field_north" model="mdv.agri.field">
+        <field name="name">North Field</field>
+        <field name="code">NF</field>
+        <field name="farm_id" ref="farm_northwind"/>
+        <field name="area_ha">39.8</field>
+        <field name="boundary_geojson">{&quot;type&quot;: &quot;Polygon&quot;, &quot;coordinates&quot;: [[[-93.762, 41.952], [-93.756, 41.952], [-93.756, 41.9592], [-93.762, 41.9592], [-93.762, 41.952]]]}</field>
+        <field name="soil_type_id" ref="mdv_agriculture_suite.soil_silt_loam"/>
+        <field name="soil_ph">6.6</field>
+        <field name="organic_matter">3.2</field>
+        <field name="nitrogen_ppm">18</field>
+        <field name="phosphorus_ppm">24</field>
+        <field name="potassium_ppm">160</field>
+        <field name="irrigation_type">rainfed</field>
+        <field name="tenure">owned</field>
+    </record>
+    <record id="field_south" model="mdv.agri.field">
+        <field name="name">South Field</field>
+        <field name="code">SF</field>
+        <field name="farm_id" ref="farm_northwind"/>
+        <field name="area_ha">59.7</field>
+        <field name="boundary_geojson">{&quot;type&quot;: &quot;Polygon&quot;, &quot;coordinates&quot;: [[[-93.762, 41.94], [-93.7548, 41.94], [-93.7548, 41.949], [-93.762, 41.949], [-93.762, 41.94]]]}</field>
+        <field name="soil_type_id" ref="mdv_agriculture_suite.soil_loam"/>
+        <field name="soil_ph">6.4</field>
+        <field name="organic_matter">3.2</field>
+        <field name="nitrogen_ppm">18</field>
+        <field name="phosphorus_ppm">24</field>
+        <field name="potassium_ppm">160</field>
+        <field name="irrigation_type">pivot</field>
+        <field name="tenure">owned</field>
+    </record>
+    <record id="field_river" model="mdv.agri.field">
+        <field name="name">River Plot</field>
+        <field name="code">RP</field>
+        <field name="farm_id" ref="farm_northwind"/>
+        <field name="area_ha">8.3</field>
+        <field name="boundary_geojson">{&quot;type&quot;: &quot;Polygon&quot;, &quot;coordinates&quot;: [[[-93.7485, 41.944], [-93.7455, 41.944], [-93.7455, 41.947], [-93.7485, 41.947], [-93.7485, 41.944]]]}</field>
+        <field name="soil_type_id" ref="mdv_agriculture_suite.soil_sandy_loam"/>
+        <field name="soil_ph">6.9</field>
+        <field name="organic_matter">3.2</field>
+        <field name="nitrogen_ppm">18</field>
+        <field name="phosphorus_ppm">24</field>
+        <field name="potassium_ppm">160</field>
+        <field name="irrigation_type">drip</field>
+        <field name="tenure">leased</field>
+        <field name="lease_cost_per_season">1800</field>
+    </record>
+    <record id="field_east" model="mdv.agri.field">
+        <field name="name">East Pasture</field>
+        <field name="code">EP</field>
+        <field name="farm_id" ref="farm_northwind"/>
+        <field name="area_ha">25.3</field>
+        <field name="boundary_geojson">{&quot;type&quot;: &quot;Polygon&quot;, &quot;coordinates&quot;: [[[-93.7485, 41.9525], [-93.7435, 41.9525], [-93.7435, 41.958], [-93.7485, 41.958], [-93.7485, 41.9525]]]}</field>
+        <field name="soil_type_id" ref="mdv_agriculture_suite.soil_clay_loam"/>
+        <field name="soil_ph">6.1</field>
+        <field name="organic_matter">3.2</field>
+        <field name="nitrogen_ppm">18</field>
+        <field name="phosphorus_ppm">24</field>
+        <field name="potassium_ppm">160</field>
+        <field name="irrigation_type">rainfed</field>
+        <field name="tenure">owned</field>
+    </record>
+    <record id="season_prev" model="mdv.agri.season">
+        <field name="name" eval="'%s Main Season' % (DateTime.today().year - 1)"/>
+        <field name="date_start" eval="'%s-03-01' % (DateTime.today().year - 1)"/>
+        <field name="date_end" eval="'%s-11-30' % (DateTime.today().year - 1)"/>
+    </record>
+    <record id="season_current" model="mdv.agri.season">
+        <field name="name" eval="'%s Main Season' % DateTime.today().year"/>
+        <field name="date_start" eval="(DateTime.today() + relativedelta(days=-150)).strftime('%Y-%m-%d')"/>
+        <field name="date_end" eval="(DateTime.today() + relativedelta(days=120)).strftime('%Y-%m-%d')"/>
+    </record>
+    <record id="pest_aphid" model="mdv.agri.pest">
+        <field name="name">Aphids</field>
+        <field name="pest_type">insect</field>
+        <field name="scientific_name">Aphidoidea</field>
+        <field name="symptoms">Curled leaves, honeydew, colonies under leaves.</field>
+        <field name="threshold">15 aphids per tiller before heading</field>
+        <field name="recommendation">Spray pyrethrin when the threshold is reached; keep beneficial insects.</field>
+        <field name="treatment_line_ids" eval="[(0, 0, {'product_id': ref('prod_insecticide'), 'rate_per_ha': 0.4})]"/>
+    </record>
+    <record id="pest_rust" model="mdv.agri.pest">
+        <field name="name">Wheat Leaf Rust</field>
+        <field name="pest_type">disease</field>
+        <field name="scientific_name">Puccinia triticina</field>
+        <field name="symptoms">Orange-brown pustules on leaves.</field>
+        <field name="threshold">First pustules on flag leaf -1</field>
+        <field name="recommendation">Apply copper fungicide; resistant varieties next season.</field>
+        <field name="treatment_line_ids" eval="[(0, 0, {'product_id': ref('prod_fungicide'), 'rate_per_ha': 1.0})]"/>
+    </record>
+    <record id="pest_nclb" model="mdv.agri.pest">
+        <field name="name">Northern Corn Leaf Blight</field>
+        <field name="pest_type">disease</field>
+        <field name="scientific_name">Exserohilum turcicum</field>
+        <field name="symptoms">Long grey-green lesions on lower leaves.</field>
+        <field name="threshold">Lesions on the third leaf below the ear before tasseling</field>
+        <field name="recommendation">Fungicide at VT-R1; rotate crops; bury residue.</field>
+        <field name="treatment_line_ids" eval="[(0, 0, {'product_id': ref('prod_fungicide'), 'rate_per_ha': 1.2})]"/>
+    </record>
+    <record id="pest_blight" model="mdv.agri.pest">
+        <field name="name">Tomato Late Blight</field>
+        <field name="pest_type">disease</field>
+        <field name="scientific_name">Phytophthora infestans</field>
+        <field name="symptoms">Dark water-soaked spots, white mould under leaves.</field>
+        <field name="threshold">Any lesion in wet weather</field>
+        <field name="recommendation">Copper fungicide every 7 days in wet weather; remove infected plants.</field>
+        <field name="treatment_line_ids" eval="[(0, 0, {'product_id': ref('prod_fungicide'), 'rate_per_ha': 1.5})]"/>
+    </record>
+    <record id="pest_waterhemp" model="mdv.agri.pest">
+        <field name="name">Waterhemp</field>
+        <field name="pest_type">weed</field>
+        <field name="scientific_name">Amaranthus tuberculatus</field>
+        <field name="symptoms">Fast-growing broadleaf weed.</field>
+        <field name="threshold">Weeds over 10 cm</field>
+        <field name="recommendation">Post-emergence herbicide before weeds pass 10 cm.</field>
+        <field name="treatment_line_ids" eval="[(0, 0, {'product_id': ref('prod_herbicide'), 'rate_per_ha': 2.0})]"/>
+    </record>
+    <record id="crop_wheat" model="mdv.agri.crop">
+        <field name="name">Winter Wheat</field>
+        <field name="code">WHT</field>
+        <field name="category">cereal</field>
+        <field name="product_id" ref="prod_wheat_grain"/>
+        <field name="growing_days">150</field>
+        <field name="expected_yield_per_ha">6200</field>
+        <field name="base_temperature_c">0.0</field>
+        <field name="pest_ids" eval="[(6, 0, [ref('pest_aphid'), ref('pest_rust')])]"/>
+        <field name="template_line_ids" eval="[(0, 0, {'sequence': 10, 'day_offset': -10, 'name': 'Ploughing and seedbed', 'activity_type': 'land_prep', 'qty_per_ha': 0, 'labour_hours_per_ha': 0.6, 'machine_hours_per_ha': 1.2}), (0, 0, {'sequence': 20, 'day_offset': 0, 'name': 'Drilling wheat', 'activity_type': 'sowing', 'qty_per_ha': 180, 'labour_hours_per_ha': 0.4, 'machine_hours_per_ha': 0.8, 'product_id': ref('prod_wheat_seed')}), (0, 0, {'sequence': 30, 'day_offset': 25, 'name': 'Pre-emergence weed control', 'activity_type': 'spraying', 'qty_per_ha': 1.5, 'labour_hours_per_ha': 0.1, 'machine_hours_per_ha': 0.3, 'product_id': ref('prod_herbicide')}), (0, 0, {'sequence': 40, 'day_offset': 60, 'name': 'Nitrogen top dressing', 'activity_type': 'fertilizer', 'qty_per_ha': 160, 'labour_hours_per_ha': 0.2, 'machine_hours_per_ha': 0.4, 'product_id': ref('prod_urea')}), (0, 0, {'sequence': 50, 'day_offset': 90, 'name': 'Fungicide at flag leaf', 'activity_type': 'spraying', 'qty_per_ha': 1.0, 'labour_hours_per_ha': 0.1, 'machine_hours_per_ha': 0.3, 'product_id': ref('prod_fungicide')}), (0, 0, {'sequence': 60, 'day_offset': 150, 'name': 'Combine harvest', 'activity_type': 'harvest', 'qty_per_ha': 0, 'labour_hours_per_ha': 0.3, 'machine_hours_per_ha': 0.7})]"/>
+    </record>
+    <record id="crop_corn" model="mdv.agri.crop">
+        <field name="name">Grain Corn</field>
+        <field name="code">CRN</field>
+        <field name="category">cereal</field>
+        <field name="product_id" ref="prod_corn_grain"/>
+        <field name="growing_days">135</field>
+        <field name="expected_yield_per_ha">11000</field>
+        <field name="base_temperature_c">10.0</field>
+        <field name="pest_ids" eval="[(6, 0, [ref('pest_nclb'), ref('pest_waterhemp')])]"/>
+        <field name="template_line_ids" eval="[(0, 0, {'sequence': 10, 'day_offset': -7, 'name': 'Disc and field cultivate', 'activity_type': 'land_prep', 'qty_per_ha': 0, 'labour_hours_per_ha': 0.5, 'machine_hours_per_ha': 1.0}), (0, 0, {'sequence': 20, 'day_offset': 0, 'name': 'Planting corn', 'activity_type': 'sowing', 'qty_per_ha': 22, 'labour_hours_per_ha': 0.4, 'machine_hours_per_ha': 0.7, 'product_id': ref('prod_corn_seed')}), (0, 0, {'sequence': 30, 'day_offset': 5, 'name': 'Starter NPK', 'activity_type': 'fertilizer', 'qty_per_ha': 150, 'labour_hours_per_ha': 0.2, 'machine_hours_per_ha': 0.3, 'product_id': ref('prod_npk')}), (0, 0, {'sequence': 40, 'day_offset': 30, 'name': 'Post-emergence weed control', 'activity_type': 'spraying', 'qty_per_ha': 2.0, 'labour_hours_per_ha': 0.1, 'machine_hours_per_ha': 0.3, 'product_id': ref('prod_herbicide')}), (0, 0, {'sequence': 50, 'day_offset': 40, 'name': 'Side-dress nitrogen', 'activity_type': 'fertilizer', 'qty_per_ha': 180, 'labour_hours_per_ha': 0.2, 'machine_hours_per_ha': 0.4, 'product_id': ref('prod_urea')}), (0, 0, {'sequence': 60, 'day_offset': 55, 'name': 'Pivot irrigation', 'activity_type': 'irrigation', 'qty_per_ha': 0, 'labour_hours_per_ha': 0.1, 'machine_hours_per_ha': 0.0}), (0, 0, {'sequence': 70, 'day_offset': 135, 'name': 'Combine harvest', 'activity_type': 'harvest', 'qty_per_ha': 0, 'labour_hours_per_ha': 0.3, 'machine_hours_per_ha': 0.8})]"/>
+    </record>
+    <record id="crop_tomato" model="mdv.agri.crop">
+        <field name="name">Field Tomatoes</field>
+        <field name="code">TOM</field>
+        <field name="category">vegetable</field>
+        <field name="product_id" ref="prod_tomatoes"/>
+        <field name="growing_days">95</field>
+        <field name="expected_yield_per_ha">60000</field>
+        <field name="base_temperature_c">10.0</field>
+        <field name="pest_ids" eval="[(6, 0, [ref('pest_blight')])]"/>
+        <field name="template_line_ids" eval="[(0, 0, {'sequence': 10, 'day_offset': -5, 'name': 'Bed preparation', 'activity_type': 'land_prep', 'qty_per_ha': 0, 'labour_hours_per_ha': 6, 'machine_hours_per_ha': 2}), (0, 0, {'sequence': 20, 'day_offset': 0, 'name': 'Transplanting', 'activity_type': 'sowing', 'qty_per_ha': 18000, 'labour_hours_per_ha': 30, 'machine_hours_per_ha': 1, 'product_id': ref('prod_tomato_seedling')}), (0, 0, {'sequence': 30, 'day_offset': 10, 'name': 'Base NPK', 'activity_type': 'fertilizer', 'qty_per_ha': 400, 'labour_hours_per_ha': 4, 'machine_hours_per_ha': 0.5, 'product_id': ref('prod_npk')}), (0, 0, {'sequence': 40, 'day_offset': 20, 'name': 'Drip irrigation', 'activity_type': 'irrigation', 'qty_per_ha': 0, 'labour_hours_per_ha': 2, 'machine_hours_per_ha': 0}), (0, 0, {'sequence': 50, 'day_offset': 45, 'name': 'Blight protection', 'activity_type': 'spraying', 'qty_per_ha': 1.5, 'labour_hours_per_ha': 2, 'machine_hours_per_ha': 0.5, 'product_id': ref('prod_fungicide')}), (0, 0, {'sequence': 60, 'day_offset': 95, 'name': 'Hand picking', 'activity_type': 'harvest', 'qty_per_ha': 0, 'labour_hours_per_ha': 120, 'machine_hours_per_ha': 0})]"/>
+    </record>
+    <record id="variety_wheat_1" model="mdv.agri.crop.variety">
+        <field name="name">Northern Gold</field>
+        <field name="crop_id" ref="crop_wheat"/>
+        <field name="growing_days">150</field>
+        <field name="expected_yield_per_ha">6500</field>
+        <field name="seed_product_id" ref="prod_wheat_seed"/>
+        <field name="seed_rate_per_ha">180</field>
+        <field name="traits">Rust tolerant</field>
+    </record>
+    <record id="variety_corn_1" model="mdv.agri.crop.variety">
+        <field name="name">Prairie 108</field>
+        <field name="crop_id" ref="crop_corn"/>
+        <field name="growing_days">130</field>
+        <field name="expected_yield_per_ha">11500</field>
+        <field name="seed_product_id" ref="prod_corn_seed"/>
+        <field name="seed_rate_per_ha">22</field>
+        <field name="traits">108-day hybrid</field>
+    </record>
+    <record id="variety_tomato_1" model="mdv.agri.crop.variety">
+        <field name="name">Roma VF</field>
+        <field name="crop_id" ref="crop_tomato"/>
+        <field name="growing_days">95</field>
+        <field name="expected_yield_per_ha">60000</field>
+        <field name="traits">Processing type</field>
+    </record>
+    <record id="breed_holstein" model="mdv.agri.animal.breed">
+        <field name="name">Holstein Friesian</field>
+        <field name="species_id" ref="mdv_agriculture_suite.species_cattle"/>
+        <field name="purpose">dairy</field>
+    </record>
+    <record id="breed_jersey" model="mdv.agri.animal.breed">
+        <field name="name">Jersey</field>
+        <field name="species_id" ref="mdv_agriculture_suite.species_cattle"/>
+        <field name="purpose">dairy</field>
+    </record>
+    <record id="breed_leghorn" model="mdv.agri.animal.breed">
+        <field name="name">White Leghorn</field>
+        <field name="species_id" ref="mdv_agriculture_suite.species_poultry"/>
+        <field name="purpose">layer</field>
+    </record>
+    <record id="breed_saanen" model="mdv.agri.animal.breed">
+        <field name="name">Saanen</field>
+        <field name="species_id" ref="mdv_agriculture_suite.species_goat"/>
+        <field name="purpose">dairy</field>
+    </record>
+    <record id="herd_dairy" model="mdv.agri.herd">
+        <field name="name">Milking Herd A</field>
+        <field name="code">MHA</field>
+        <field name="farm_id" ref="farm_northwind"/>
+        <field name="species_id" ref="mdv_agriculture_suite.species_cattle"/>
+        <field name="breed_id" ref="breed_holstein"/>
+        <field name="herd_type">dairy</field>
+        <field name="shed">Free-stall barn 1</field>
+        <field name="keeper_id" ref="emp_taylor"/>
+        <field name="ration_line_ids" eval="[(0, 0, {'product_id': ref('prod_dairy_feed'), 'qty_per_head': 8.0}), (0, 0, {'product_id': ref('prod_hay'), 'qty_per_head': 12.0})]"/>
+    </record>
+    <record id="herd_layers" model="mdv.agri.herd">
+        <field name="name">Layer Flock 1</field>
+        <field name="code">LF1</field>
+        <field name="farm_id" ref="farm_northwind"/>
+        <field name="species_id" ref="mdv_agriculture_suite.species_poultry"/>
+        <field name="breed_id" ref="breed_leghorn"/>
+        <field name="herd_type">layers</field>
+        <field name="is_flock" eval="True"/>
+        <field name="shed">Layer house 1</field>
+        <field name="keeper_id" ref="emp_taylor"/>
+        <field name="placement_date" eval="(DateTime.today() + relativedelta(days=-210)).strftime('%Y-%m-%d')"/>
+        <field name="initial_count">1200</field>
+        <field name="ration_line_ids" eval="[(0, 0, {'product_id': ref('prod_layer_mash'), 'qty_per_head': 0.115})]"/>
+    </record>
+    <record id="herd_goats" model="mdv.agri.herd">
+        <field name="name">Dairy Goats</field>
+        <field name="code">DG</field>
+        <field name="farm_id" ref="farm_northwind"/>
+        <field name="species_id" ref="mdv_agriculture_suite.species_goat"/>
+        <field name="breed_id" ref="breed_saanen"/>
+        <field name="herd_type">small_ruminant</field>
+        <field name="shed">Goat barn</field>
+        <field name="keeper_id" ref="emp_taylor"/>
+        <field name="ration_line_ids" eval="[(0, 0, {'product_id': ref('prod_goat_feed'), 'qty_per_head': 1.2})]"/>
+    </record>
+    <record id="animal_duke" model="mdv.agri.animal">
+        <field name="tag">NW-900</field>
+        <field name="name">Duke</field>
+        <field name="species_id" ref="mdv_agriculture_suite.species_cattle"/>
+        <field name="breed_id" ref="breed_holstein"/>
+        <field name="sex">male</field>
+        <field name="birth_date" eval="(DateTime.today() + relativedelta(days=-1500)).strftime('%Y-%m-%d')"/>
+        <field name="purpose">breeding</field>
+        <field name="farm_id" ref="farm_northwind"/>
+    </record>
+    <record id="cow_daisy" model="mdv.agri.animal">
+        <field name="tag">NW-101</field>
+        <field name="name">Daisy</field>
+        <field name="species_id" ref="mdv_agriculture_suite.species_cattle"/>
+        <field name="breed_id" ref="breed_holstein"/>
+        <field name="sex">female</field>
+        <field name="birth_date" eval="(DateTime.today() + relativedelta(days=-1900)).strftime('%Y-%m-%d')"/>
+        <field name="herd_id" ref="herd_dairy"/>
+        <field name="purpose">dairy</field>
+        <field name="lactation_status">lactating</field>
+        <field name="last_birth_date" eval="(DateTime.today() + relativedelta(days=-120)).strftime('%Y-%m-%d')"/>
+        <field name="rfid">982000000101</field>
+        <field name="weight_log_ids" eval="[(0, 0, {'date': (DateTime.today() + relativedelta(days=-60)).strftime('%Y-%m-%d'), 'weight_kg': 670}), (0, 0, {'date': (DateTime.today() + relativedelta(days=-5)).strftime('%Y-%m-%d'), 'weight_kg': 685})]"/>
+    </record>
+    <record id="cow_bella" model="mdv.agri.animal">
+        <field name="tag">NW-102</field>
+        <field name="name">Bella</field>
+        <field name="species_id" ref="mdv_agriculture_suite.species_cattle"/>
+        <field name="breed_id" ref="breed_holstein"/>
+        <field name="sex">female</field>
+        <field name="birth_date" eval="(DateTime.today() + relativedelta(days=-1650)).strftime('%Y-%m-%d')"/>
+        <field name="herd_id" ref="herd_dairy"/>
+        <field name="purpose">dairy</field>
+        <field name="lactation_status">lactating</field>
+        <field name="last_birth_date" eval="(DateTime.today() + relativedelta(days=-95)).strftime('%Y-%m-%d')"/>
+        <field name="rfid">982000000102</field>
+        <field name="weight_log_ids" eval="[(0, 0, {'date': (DateTime.today() + relativedelta(days=-60)).strftime('%Y-%m-%d'), 'weight_kg': 680}), (0, 0, {'date': (DateTime.today() + relativedelta(days=-5)).strftime('%Y-%m-%d'), 'weight_kg': 695})]"/>
+    </record>
+    <record id="cow_rosie" model="mdv.agri.animal">
+        <field name="tag">NW-103</field>
+        <field name="name">Rosie</field>
+        <field name="species_id" ref="mdv_agriculture_suite.species_cattle"/>
+        <field name="breed_id" ref="breed_holstein"/>
+        <field name="sex">female</field>
+        <field name="birth_date" eval="(DateTime.today() + relativedelta(days=-1400)).strftime('%Y-%m-%d')"/>
+        <field name="herd_id" ref="herd_dairy"/>
+        <field name="purpose">dairy</field>
+        <field name="lactation_status">lactating</field>
+        <field name="last_birth_date" eval="(DateTime.today() + relativedelta(days=-60)).strftime('%Y-%m-%d')"/>
+        <field name="rfid">982000000103</field>
+        <field name="weight_log_ids" eval="[(0, 0, {'date': (DateTime.today() + relativedelta(days=-60)).strftime('%Y-%m-%d'), 'weight_kg': 690}), (0, 0, {'date': (DateTime.today() + relativedelta(days=-5)).strftime('%Y-%m-%d'), 'weight_kg': 705})]"/>
+    </record>
+    <record id="cow_clover" model="mdv.agri.animal">
+        <field name="tag">NW-104</field>
+        <field name="name">Clover</field>
+        <field name="species_id" ref="mdv_agriculture_suite.species_cattle"/>
+        <field name="breed_id" ref="breed_holstein"/>
+        <field name="sex">female</field>
+        <field name="birth_date" eval="(DateTime.today() + relativedelta(days=-2100)).strftime('%Y-%m-%d')"/>
+        <field name="herd_id" ref="herd_dairy"/>
+        <field name="purpose">dairy</field>
+        <field name="lactation_status">lactating</field>
+        <field name="last_birth_date" eval="(DateTime.today() + relativedelta(days=-150)).strftime('%Y-%m-%d')"/>
+        <field name="rfid">982000000104</field>
+        <field name="weight_log_ids" eval="[(0, 0, {'date': (DateTime.today() + relativedelta(days=-60)).strftime('%Y-%m-%d'), 'weight_kg': 700}), (0, 0, {'date': (DateTime.today() + relativedelta(days=-5)).strftime('%Y-%m-%d'), 'weight_kg': 715})]"/>
+    </record>
+    <record id="cow_maple" model="mdv.agri.animal">
+        <field name="tag">NW-105</field>
+        <field name="name">Maple</field>
+        <field name="species_id" ref="mdv_agriculture_suite.species_cattle"/>
+        <field name="breed_id" ref="breed_holstein"/>
+        <field name="sex">female</field>
+        <field name="birth_date" eval="(DateTime.today() + relativedelta(days=-1200)).strftime('%Y-%m-%d')"/>
+        <field name="herd_id" ref="herd_dairy"/>
+        <field name="purpose">dairy</field>
+        <field name="lactation_status">lactating</field>
+        <field name="last_birth_date" eval="(DateTime.today() + relativedelta(days=-40)).strftime('%Y-%m-%d')"/>
+        <field name="rfid">982000000105</field>
+        <field name="weight_log_ids" eval="[(0, 0, {'date': (DateTime.today() + relativedelta(days=-60)).strftime('%Y-%m-%d'), 'weight_kg': 640}), (0, 0, {'date': (DateTime.today() + relativedelta(days=-5)).strftime('%Y-%m-%d'), 'weight_kg': 655})]"/>
+    </record>
+    <record id="cow_hazel" model="mdv.agri.animal">
+        <field name="tag">NW-106</field>
+        <field name="name">Hazel</field>
+        <field name="species_id" ref="mdv_agriculture_suite.species_cattle"/>
+        <field name="breed_id" ref="breed_holstein"/>
+        <field name="sex">female</field>
+        <field name="birth_date" eval="(DateTime.today() + relativedelta(days=-1000)).strftime('%Y-%m-%d')"/>
+        <field name="herd_id" ref="herd_dairy"/>
+        <field name="purpose">dairy</field>
+        <field name="lactation_status">lactating</field>
+        <field name="last_birth_date" eval="(DateTime.today() + relativedelta(days=-20)).strftime('%Y-%m-%d')"/>
+        <field name="rfid">982000000106</field>
+        <field name="weight_log_ids" eval="[(0, 0, {'date': (DateTime.today() + relativedelta(days=-60)).strftime('%Y-%m-%d'), 'weight_kg': 650}), (0, 0, {'date': (DateTime.today() + relativedelta(days=-5)).strftime('%Y-%m-%d'), 'weight_kg': 665})]"/>
+    </record>
+    <record id="goat_0" model="mdv.agri.animal">
+        <field name="tag">NW-201</field>
+        <field name="name">Pearl</field>
+        <field name="species_id" ref="mdv_agriculture_suite.species_goat"/>
+        <field name="breed_id" ref="breed_saanen"/>
+        <field name="sex">female</field>
+        <field name="birth_date" eval="(DateTime.today() + relativedelta(days=-800)).strftime('%Y-%m-%d')"/>
+        <field name="herd_id" ref="herd_goats"/>
+        <field name="purpose">dairy</field>
+        <field name="lactation_status">lactating</field>
+    </record>
+    <record id="goat_1" model="mdv.agri.animal">
+        <field name="tag">NW-202</field>
+        <field name="name">Willow</field>
+        <field name="species_id" ref="mdv_agriculture_suite.species_goat"/>
+        <field name="breed_id" ref="breed_saanen"/>
+        <field name="sex">female</field>
+        <field name="birth_date" eval="(DateTime.today() + relativedelta(days=-890)).strftime('%Y-%m-%d')"/>
+        <field name="herd_id" ref="herd_goats"/>
+        <field name="purpose">dairy</field>
+        <field name="lactation_status">lactating</field>
+    </record>
+    <record id="goat_2" model="mdv.agri.animal">
+        <field name="tag">NW-203</field>
+        <field name="name">Fern</field>
+        <field name="species_id" ref="mdv_agriculture_suite.species_goat"/>
+        <field name="breed_id" ref="breed_saanen"/>
+        <field name="sex">female</field>
+        <field name="birth_date" eval="(DateTime.today() + relativedelta(days=-980)).strftime('%Y-%m-%d')"/>
+        <field name="herd_id" ref="herd_goats"/>
+        <field name="purpose">dairy</field>
+        <field name="lactation_status">lactating</field>
+    </record>
+    <record id="vacc_clostridial" model="mdv.agri.vaccination.schedule">
+        <field name="name">Clostridial 7-way booster</field>
+        <field name="species_id" ref="mdv_agriculture_suite.species_cattle"/>
+        <field name="product_id" ref="prod_vaccine_clostridial"/>
+        <field name="dose_per_head">1</field>
+        <field name="first_age_days">90</field>
+        <field name="repeat_days">365</field>
+        <field name="lead_days">30</field>
+    </record>
+    <record id="vacc_nd" model="mdv.agri.vaccination.schedule">
+        <field name="name">Newcastle disease (ND) booster</field>
+        <field name="species_id" ref="mdv_agriculture_suite.species_poultry"/>
+        <field name="herd_type">layers</field>
+        <field name="product_id" ref="prod_vaccine_nd"/>
+        <field name="dose_per_head">1</field>
+        <field name="first_age_days">7</field>
+        <field name="repeat_days">60</field>
+        <field name="lead_days">14</field>
+    </record>
+    <function model="mdv.agri.farm" name="_mdv_agri_demo_flow"/>
+</odoo>

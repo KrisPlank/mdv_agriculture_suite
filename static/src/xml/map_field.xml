@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="mdv_agriculture_suite.AgriMapField">
+        <div class="o_agri_map_field w-100">
+            <div t-if="editable" class="d-flex align-items-center gap-2 mb-2">
+                <span class="text-muted small">Click on the map to draw the field boundary.</span>
+                <span class="badge text-bg-success" t-esc="areaLabel"/>
+                <button type="button" class="btn btn-sm btn-secondary ms-auto" t-on-click="onUndo" t-att-disabled="!state.points">Undo point</button>
+                <button type="button" class="btn btn-sm btn-secondary" t-on-click="onClear" t-att-disabled="!state.points">Clear</button>
+            </div>
+            <div t-ref="map" class="o_agri_map border rounded" t-attf-style="height: {{props.height}}px;"/>
+        </div>
+    </t>
+</templates>

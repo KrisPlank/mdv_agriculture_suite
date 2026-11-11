@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Crop -->
+    <record id="view_agri_crop_list" model="ir.ui.view">
+        <field name="name">mdv.agri.crop.list</field>
+        <field name="model">mdv.agri.crop</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="category"/>
+                <field name="product_id"/>
+                <field name="growing_days"/>
+                <field name="expected_yield_per_ha"/>
+                <field name="yield_uom_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_agri_crop_kanban" model="ir.ui.view">
+        <field name="name">mdv.agri.crop.kanban</field>
+        <field name="model">mdv.agri.crop</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <templates>
+                    <t t-name="card" class="flex-row">
+                        <field name="image" widget="image" class="me-2" options="{'size': [56, 56]}" invisible="not image"/>
+                        <div>
+                            <field name="name" class="fw-bold"/>
+                            <div class="text-muted"><field name="category"/></div>
+                            <div><field name="growing_days"/> days, <field name="expected_yield_per_ha"/> <field name="yield_uom_id"/>/ha</div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_agri_crop_form" model="ir.ui.view">
+        <field name="name">mdv.agri.crop.form</field>
+        <field name="model">mdv.agri.crop</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_plans" type="object" class="oe_stat_button" icon="fa-leaf">
+                            <field name="plan_count" widget="statinfo" string="Crop Plans"/>
+                        </button>
+                    </div>
+                    <field name="image" widget="image" class="oe_avatar"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Winter Wheat"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code"/>
+                            <field name="scientific_name"/>
+                            <field name="category"/>
+                            <field name="product_id"/>
+                            <field name="yield_uom_id"/>
+                        </group>
+                        <group>
+                            <field name="growing_days"/>
+                            <field name="expected_yield_per_ha"/>
+                            <field name="base_temperature_c"/>
+                            <field name="season_ids" widget="many2many_tags"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Activity Template" name="template">
+                            <p class="text-muted">Confirming a crop plan creates these activities (dates from the sowing date) and a budget scaled to the planted area.</p>
+                            <field name="template_line_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="day_offset"/>
+                                    <field name="name"/>
+                                    <field name="activity_type"/>
+                                    <field name="product_id"/>
+                                    <field name="qty_per_ha"/>
+                                    <field name="labour_hours_per_ha"/>
+                                    <field name="machine_hours_per_ha"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Varieties" name="varieties">
+                            <field name="variety_ids">
+                                <list editable="bottom">
+                                    <field name="name"/>
+                                    <field name="growing_days"/>
+                                    <field name="expected_yield_per_ha"/>
+                                    <field name="seed_product_id"/>
+                                    <field name="seed_rate_per_ha"/>
+                                    <field name="traits"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Pests and Diseases" name="pests">
+                            <field name="pest_ids"/>
+                        </page>
+                        <page string="Notes" name="notes">
+                            <field name="notes"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_agri_crop" model="ir.actions.act_window">
+        <field name="name">Crops</field>
+        <field name="res_model">mdv.agri.crop</field>
+        <field name="view_mode">kanban,list,form</field>
+    </record>
+
+    <record id="view_agri_crop_variety_list" model="ir.ui.view">
+        <field name="name">mdv.agri.crop.variety.list</field>
+        <field name="model">mdv.agri.crop.variety</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="crop_id"/>
+                <field name="name"/>
+                <field name="growing_days"/>
+                <field name="expected_yield_per_ha"/>
+                <field name="seed_product_id"/>
+                <field name="seed_rate_per_ha"/>
+                <field name="traits"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_agri_crop_variety" model="ir.actions.act_window">
+        <field name="name">Varieties</field>
+        <field name="res_model">mdv.agri.crop.variety</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <!-- Season -->
+    <record id="view_agri_season_list" model="ir.ui.view">
+        <field name="name">mdv.agri.season.list</field>
+        <field name="model">mdv.agri.season</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="name"/>
+                <field name="date_start"/>
+                <field name="date_end"/>
+                <field name="plan_count"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_agri_season" model="ir.actions.act_window">
+        <field name="name">Seasons</field>
+        <field name="res_model">mdv.agri.season</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <!-- Pest -->
+    <record id="view_agri_pest_list" model="ir.ui.view">
+        <field name="name">mdv.agri.pest.list</field>
+        <field name="model">mdv.agri.pest</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="pest_type"/>
+                <field name="scientific_name"/>
+                <field name="crop_ids" widget="many2many_tags"/>
+                <field name="threshold"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_agri_pest_form" model="ir.ui.view">
+        <field name="name">mdv.agri.pest.form</field>
+        <field name="model">mdv.agri.pest</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <field name="image" widget="image" class="oe_avatar"/>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="e.g. Aphids"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="pest_type"/>
+                            <field name="scientific_name"/>
+                            <field name="crop_ids" widget="many2many_tags"/>
+                        </group>
+                        <group>
+                            <field name="threshold"/>
+                        </group>
+                    </group>
+                    <group string="Symptoms">
+                        <field name="symptoms" nolabel="1" colspan="2"/>
+                    </group>
+                    <group string="Recommended Treatment">
+                        <field name="recommendation" nolabel="1" colspan="2"/>
+                    </group>
+                    <field name="treatment_line_ids">
+                        <list editable="bottom">
+                            <field name="product_id"/>
+                            <field name="rate_per_ha"/>
+                            <field name="uom_id"/>
+                            <field name="note"/>
+                        </list>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_agri_pest" model="ir.actions.act_window">
+        <field name="name">Pests and Diseases</field>
+        <field name="res_model">mdv.agri.pest</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_agri_soil_type_list" model="ir.ui.view">
+        <field name="name">mdv.agri.soil.type.list</field>
+        <field name="model">mdv.agri.soil.type</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="name"/>
+                <field name="texture"/>
+                <field name="drainage"/>
+                <field name="description"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_agri_soil_type" model="ir.actions.act_window">
+        <field name="name">Soil Types</field>
+        <field name="res_model">mdv.agri.soil.type</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <record id="view_agri_quality_grade_list" model="ir.ui.view">
+        <field name="name">mdv.agri.quality.grade.list</field>
+        <field name="model">mdv.agri.quality.grade</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="code"/>
+                <field name="name"/>
+                <field name="price_factor"/>
+                <field name="description"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_agri_quality_grade" model="ir.actions.act_window">
+        <field name="name">Quality Grades</field>
+        <field name="res_model">mdv.agri.quality.grade</field>
+        <field name="view_mode">list</field>
+    </record>
+</odoo>

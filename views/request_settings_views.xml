@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Crop requests -->
+    <record id="view_agri_crop_request_list" model="ir.ui.view">
+        <field name="name">mdv.agri.crop.request.list</field>
+        <field name="model">mdv.agri.crop.request</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="create_date" string="Received"/>
+                <field name="partner_id"/>
+                <field name="request_type"/>
+                <field name="crop_id"/>
+                <field name="quantity"/>
+                <field name="uom_id"/>
+                <field name="area_ha" optional="show"/>
+                <field name="desired_date" optional="show"/>
+                <field name="source" optional="show"/>
+                <field name="user_id" widget="many2one_avatar_user" optional="show"/>
+                <field name="state" widget="badge" decoration-info="state in ('new', 'review')" decoration-success="state in ('approved', 'converted')" decoration-muted="state in ('rejected', 'cancelled')"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_agri_crop_request_kanban" model="ir.ui.view">
+        <field name="name">mdv.agri.crop.request.kanban</field>
+        <field name="model">mdv.agri.crop.request</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state">
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex">
+                            <field name="crop_id" class="fw-bold"/>
+                            <field name="name" class="ms-auto small text-muted"/>
+                        </div>
+                        <field name="partner_id"/>
+                        <div class="text-muted small"><field name="request_type"/></div>
+                        <div><field name="quantity"/> <field name="uom_id"/> <span invisible="not area_ha">- <field name="area_ha"/> ha</span></div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_agri_crop_request_form" model="ir.ui.view">
+        <field name="name">mdv.agri.crop.request.form</field>
+        <field name="model">mdv.agri.crop.request</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_review" type="object" string="Start Review" class="btn-primary" invisible="state != 'new'"/>
+                    <button name="action_approve" type="object" string="Approve" class="btn-primary" invisible="state not in ('new', 'review')" groups="mdv_agriculture_suite.group_agri_manager"/>
+                    <button name="action_convert_plan" type="object" string="Plan the Crop" class="btn-primary" invisible="state not in ('review', 'approved') or request_type == 'grower'"/>
+                    <button name="action_create_purchase" type="object" string="Create Purchase Order" class="btn-primary" invisible="state not in ('review', 'approved') or request_type != 'grower'"/>
+                    <button name="action_create_quotation" type="object" string="Create Quotation" invisible="sale_order_id or request_type == 'grower' or state in ('new', 'rejected', 'cancelled')"/>
+                    <button name="action_reject" type="object" string="Reject" invisible="state not in ('new', 'review', 'approved')" groups="mdv_agriculture_suite.group_agri_manager"/>
+                    <button name="action_reset" type="object" string="Reset" invisible="state not in ('rejected', 'cancelled')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="new,review,approved,converted"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_plan" type="object" class="oe_stat_button" icon="fa-leaf" string="Crop Plan" invisible="not plan_id"/>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="request_type"/>
+                            <field name="crop_id"/>
+                            <field name="variety_id"/>
+                            <label for="quantity"/>
+                            <div class="o_row">
+                                <field name="quantity"/>
+                                <field name="uom_id"/>
+                            </div>
+                            <field name="area_ha"/>
+                        </group>
+                        <group>
+                            <field name="desired_date"/>
+                            <field name="price_unit"/>
+                            <field name="land_location"/>
+                            <field name="user_id" widget="many2one_avatar_user"/>
+                            <field name="source"/>
+                            <field name="plan_id" invisible="not plan_id"/>
+                            <field name="purchase_order_id" invisible="not purchase_order_id"/>
+                            <field name="sale_order_id" invisible="not sale_order_id"/>
+                            <field name="reject_reason" invisible="state not in ('new', 'review', 'approved', 'rejected')"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <field name="description" placeholder="Details from the customer"/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_agri_crop_request_search" model="ir.ui.view">
+        <field name="name">mdv.agri.crop.request.search</field>
+        <field name="model">mdv.agri.crop.request</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="crop_id"/>
+                <filter name="todo" string="To Review" domain="[('state', 'in', ('new', 'review'))]"/>
+                <filter name="portal" string="From Portal or Website" domain="[('source', 'in', ('portal', 'website'))]"/>
+                <group>
+                    <filter name="group_type" string="Type" context="{'group_by': 'request_type'}"/>
+                    <filter name="group_crop" string="Crop" context="{'group_by': 'crop_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_agri_crop_request" model="ir.actions.act_window">
+        <field name="name">Crop Requests</field>
+        <field name="res_model">mdv.agri.crop.request</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No crop request yet</p>
+            <p>Customers and partner farmers send requests from the website (/crop-request) or their portal account.</p>
+        </field>
+    </record>
+
+    <record id="view_agri_request_plan_wizard_form" model="ir.ui.view">
+        <field name="name">mdv.agri.request.plan.wizard.form</field>
+        <field name="model">mdv.agri.request.plan.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    <field name="request_id" readonly="1"/>
+                    <field name="crop_id"/>
+                    <field name="field_id"/>
+                    <field name="sowing_date"/>
+                    <field name="season_id"/>
+                </group>
+                <footer>
+                    <button name="action_create" type="object" string="Create Crop Plan" class="btn-primary"/>
+                    <button special="cancel" string="Cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Machinery -->
+    <record id="hr_equipment_view_form_agri" model="ir.ui.view">
+        <field name="name">maintenance.equipment.form.agri</field>
+        <field name="model">maintenance.equipment</field>
+        <field name="inherit_id" ref="maintenance.hr_equipment_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Farm Use" name="farm_use">
+                    <group>
+                        <group>
+                            <field name="mdv_agri_is_farm_machine"/>
+                            <field name="mdv_agri_hourly_rate"/>
+                            <field name="mdv_agri_service_hours"/>
+                        </group>
+                        <group>
+                            <field name="mdv_agri_hours_total"/>
+                            <field name="mdv_agri_hours_since_service"/>
+                            <field name="mdv_agri_last_service_date"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_agri_machinery" model="ir.actions.act_window">
+        <field name="name">Machinery</field>
+        <field name="res_model">maintenance.equipment</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="domain">[('mdv_agri_is_farm_machine', '=', True)]</field>
+        <field name="context">{'default_mdv_agri_is_farm_machine': True}</field>
+    </record>
+
+    <!-- Settings -->
+    <record id="res_config_settings_view_form_agri" model="ir.ui.view">
+        <field name="name">res.config.settings.form.agri</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority">60</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Agriculture" string="Agriculture" name="mdv_agriculture_suite" groups="mdv_agriculture_suite.group_agri_manager">
+                    <block title="Weather" name="agri_weather">
+                        <setting string="Daily weather from Open-Meteo" help="Fills each farm's weather log every day from its latitude and longitude. No API key.">
+                            <field name="mdv_agri_weather_auto"/>
+                            <div class="mt-2">
+                                <label for="mdv_agri_forecast_days" class="me-2"/>
+                                <field name="mdv_agri_forecast_days"/>
+                            </div>
+                        </setting>
+                        <setting string="Alert thresholds" help="An alert is posted on the farm and a warning activity is given to the farm manager.">
+                            <div class="row"><label for="mdv_agri_frost_c" class="col-6"/><field name="mdv_agri_frost_c" class="col-4"/></div>
+                            <div class="row"><label for="mdv_agri_heavy_rain_mm" class="col-6"/><field name="mdv_agri_heavy_rain_mm" class="col-4"/></div>
+                            <div class="row"><label for="mdv_agri_heat_c" class="col-6"/><field name="mdv_agri_heat_c" class="col-4"/></div>
+                            <div class="row"><label for="mdv_agri_wind_kmh" class="col-6"/><field name="mdv_agri_wind_kmh" class="col-4"/></div>
+                            <div class="row"><label for="mdv_agri_gdd_base_c" class="col-6"/><field name="mdv_agri_gdd_base_c" class="col-4"/></div>
+                        </setting>
+                    </block>
+                    <block title="Costing and Stock" name="agri_costing">
+                        <setting string="Analytic account per crop plan" help="Costs post to accounting analytics; vendor bills on the same account appear on the job cost sheet.">
+                            <field name="mdv_agri_analytic"/>
+                        </setting>
+                        <setting string="Default rates" help="Used when an employee or a machine has no hourly cost.">
+                            <div class="row"><label for="mdv_agri_labour_rate" class="col-6"/><field name="mdv_agri_labour_rate" class="col-4"/></div>
+                            <div class="row"><label for="mdv_agri_machine_rate" class="col-6"/><field name="mdv_agri_machine_rate" class="col-4"/></div>
+                        </setting>
+                        <setting string="Consume without stock" help="Allow field activities, feed and treatments to consume products the farm location does not hold (negative stock).">
+                            <field name="mdv_agri_allow_negative"/>
+                        </setting>
+                    </block>
+                    <block title="Livestock Products" name="agri_livestock">
+                        <setting string="Milk product" help="Tank milk received into stock from the milk records.">
+                            <field name="mdv_agri_milk_product_id"/>
+                        </setting>
+                        <setting string="Egg product" help="Saleable eggs received into stock from the egg records.">
+                            <field name="mdv_agri_egg_product_id"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_agri_settings" model="ir.actions.act_window">
+        <field name="name">Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+        <field name="context">{'module': 'mdv_agriculture_suite', 'bin_size': False}</field>
+    </record>
+
+    <record id="action_agri_dashboard" model="ir.actions.client">
+        <field name="name">Farm Dashboard</field>
+        <field name="tag">mdv_agri_dashboard</field>
+    </record>
+
+    <!-- Menus -->
+    <menuitem id="menu_agri_root" name="Agriculture" web_icon="mdv_agriculture_suite,static/description/icon.png"
+              sequence="45" groups="group_agri_user"/>
+    <menuitem id="menu_agri_dashboard" name="Dashboard" parent="menu_agri_root" action="action_agri_dashboard" sequence="1"/>
+
+    <menuitem id="menu_agri_crops_top" name="Crops" parent="menu_agri_root" sequence="10"/>
+    <menuitem id="menu_agri_crop_plan" name="Crop Plans" parent="menu_agri_crops_top" action="action_agri_crop_plan" sequence="1"/>
+    <menuitem id="menu_agri_activity" name="Field Activities" parent="menu_agri_crops_top" action="action_agri_activity" sequence="2"/>
+    <menuitem id="menu_agri_scouting" name="Crop Scouting" parent="menu_agri_crops_top" action="action_agri_scouting" sequence="3"/>
+    <menuitem id="menu_agri_harvest" name="Harvests" parent="menu_agri_crops_top" action="action_agri_harvest" sequence="4"/>
+    <menuitem id="menu_agri_crop_request" name="Crop Requests" parent="menu_agri_crops_top" action="action_agri_crop_request" sequence="5"/>
+
+    <menuitem id="menu_agri_farms_top" name="Farms" parent="menu_agri_root" sequence="20"/>
+    <menuitem id="menu_agri_farm" name="Farms" parent="menu_agri_farms_top" action="action_agri_farm" sequence="1"/>
+    <menuitem id="menu_agri_field" name="Fields" parent="menu_agri_farms_top" action="action_agri_field" sequence="2"/>
+    <menuitem id="menu_agri_weather" name="Weather Log" parent="menu_agri_farms_top" action="action_agri_weather_log" sequence="3"/>
+    <menuitem id="menu_agri_weather_history" name="Load Weather History" parent="menu_agri_farms_top" action="action_agri_weather_history_wizard" sequence="4"/>
+    <menuitem id="menu_agri_machinery" name="Machinery" parent="menu_agri_farms_top" action="action_agri_machinery" sequence="5"/>
+
+    <menuitem id="menu_agri_livestock_top" name="Livestock" parent="menu_agri_root" sequence="30"/>
+    <menuitem id="menu_agri_herd" name="Herds and Flocks" parent="menu_agri_livestock_top" action="action_agri_herd" sequence="1"/>
+    <menuitem id="menu_agri_animal" name="Animals" parent="menu_agri_livestock_top" action="action_agri_animal" sequence="2"/>
+    <menuitem id="menu_agri_breeding" name="Breeding" parent="menu_agri_livestock_top" action="action_agri_breeding" sequence="3"/>
+    <menuitem id="menu_agri_vet" name="Vet Treatments" parent="menu_agri_livestock_top" action="action_agri_vet_treatment" sequence="4"/>
+    <menuitem id="menu_agri_milk" name="Milk Yield" parent="menu_agri_livestock_top" action="action_agri_milk_log" sequence="5"/>
+    <menuitem id="menu_agri_egg" name="Egg Production" parent="menu_agri_livestock_top" action="action_agri_egg_log" sequence="6"/>
+    <menuitem id="menu_agri_feed" name="Feed Consumption" parent="menu_agri_livestock_top" action="action_agri_feed_log" sequence="7"/>
+    <menuitem id="menu_agri_mortality" name="Mortality" parent="menu_agri_livestock_top" action="action_agri_mortality" sequence="8"/>
+
+    <menuitem id="menu_agri_reporting" name="Reporting" parent="menu_agri_root" sequence="40"/>
+    <menuitem id="menu_agri_report_cost" name="Budget vs Actual" parent="menu_agri_reporting" action="action_agri_cost_report" sequence="1"/>
+    <menuitem id="menu_agri_report_costs" name="Farm Costs" parent="menu_agri_reporting" action="action_agri_cost_line" sequence="2"/>
+    <menuitem id="menu_agri_report_yield" name="Yield Analysis" parent="menu_agri_reporting" action="action_agri_yield_analysis" sequence="3"/>
+    <menuitem id="menu_agri_report_harvest" name="Harvest Analysis" parent="menu_agri_reporting" action="action_agri_harvest_analysis" sequence="4"/>
+
+    <menuitem id="menu_agri_config" name="Configuration" parent="menu_agri_root" sequence="90" groups="group_agri_manager"/>
+    <menuitem id="menu_agri_settings" name="Settings" parent="menu_agri_config" action="action_agri_settings" sequence="1"/>
+    <menuitem id="menu_agri_crop" name="Crops" parent="menu_agri_config" action="action_agri_crop" sequence="10"/>
+    <menuitem id="menu_agri_variety" name="Varieties" parent="menu_agri_config" action="action_agri_crop_variety" sequence="11"/>
+    <menuitem id="menu_agri_season" name="Seasons" parent="menu_agri_config" action="action_agri_season" sequence="12"/>
+    <menuitem id="menu_agri_pest" name="Pests and Diseases" parent="menu_agri_config" action="action_agri_pest" sequence="13"/>
+    <menuitem id="menu_agri_soil" name="Soil Types" parent="menu_agri_config" action="action_agri_soil_type" sequence="14"/>
+    <menuitem id="menu_agri_grade" name="Quality Grades" parent="menu_agri_config" action="action_agri_quality_grade" sequence="15"/>
+    <menuitem id="menu_agri_species" name="Species and Breeds" parent="menu_agri_config" action="action_agri_species" sequence="20"/>
+    <menuitem id="menu_agri_vaccination" name="Vaccination Schedules" parent="menu_agri_config" action="action_agri_vaccination_schedule" sequence="21"/>
+</odoo>

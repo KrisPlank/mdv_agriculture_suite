@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Farm -->
+    <record id="view_agri_farm_list" model="ir.ui.view">
+        <field name="name">mdv.agri.farm.list</field>
+        <field name="model">mdv.agri.farm</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="code" optional="show"/>
+                <field name="farm_type"/>
+                <field name="manager_id" widget="many2one_avatar_user"/>
+                <field name="city" optional="show"/>
+                <field name="country_id" optional="hide"/>
+                <field name="total_area_ha" sum="Total"/>
+                <field name="cultivated_area_ha" sum="Total"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_agri_farm_kanban" model="ir.ui.view">
+        <field name="name">mdv.agri.farm.kanban</field>
+        <field name="model">mdv.agri.farm</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="color"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex">
+                            <field name="image" widget="image" class="me-2" options="{'size': [64, 64]}" invisible="not image"/>
+                            <div>
+                                <field name="name" class="fw-bold fs-5"/>
+                                <div class="text-muted"><field name="farm_type"/> - <field name="city"/></div>
+                                <div><field name="total_area_ha"/> ha total, <field name="cultivated_area_ha"/> ha under crop</div>
+                                <div class="text-muted small"><field name="field_count"/> fields, <field name="herd_count"/> herds</div>
+                            </div>
+                        </div>
+                        <footer>
+                            <field name="manager_id" widget="many2one_avatar_user" class="ms-auto"/>
+                        </footer>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_agri_farm_form" model="ir.ui.view">
+        <field name="name">mdv.agri.farm.form</field>
+        <field name="model">mdv.agri.farm</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_fetch_weather" type="object" string="Fetch Weather" class="btn-secondary"
+                            invisible="not latitude and not longitude"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_fields" type="object" class="oe_stat_button" icon="fa-th-large">
+                            <field name="field_count" widget="statinfo" string="Fields"/>
+                        </button>
+                        <button name="action_open_plans" type="object" class="oe_stat_button" icon="fa-leaf">
+                            <field name="plan_count" widget="statinfo" string="Crop Plans"/>
+                        </button>
+                        <button name="action_open_herds" type="object" class="oe_stat_button" icon="fa-paw">
+                            <field name="herd_count" widget="statinfo" string="Herds"/>
+                        </button>
+                        <button name="action_open_animals" type="object" class="oe_stat_button" icon="fa-tag">
+                            <field name="animal_count" widget="statinfo" string="Animals"/>
+                        </button>
+                        <button name="action_open_weather" type="object" class="oe_stat_button" icon="fa-cloud">
+                            <field name="weather_count" widget="statinfo" string="Weather"/>
+                        </button>
+                    </div>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <field name="image" widget="image" class="oe_avatar"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Northwind Farms - Home Farm"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code"/>
+                            <field name="farm_type"/>
+                            <field name="manager_id" widget="many2one_avatar_user"/>
+                            <field name="partner_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                        <group>
+                            <label for="street" string="Address"/>
+                            <div class="o_address_format">
+                                <field name="street" placeholder="Street" class="o_address_street"/>
+                                <field name="city" placeholder="City" class="o_address_city"/>
+                                <field name="state_id" placeholder="State" class="o_address_state" options="{'no_create': True}"/>
+                                <field name="zip" placeholder="ZIP" class="o_address_zip"/>
+                                <field name="country_id" placeholder="Country" class="o_address_country" options="{'no_create': True}"/>
+                            </div>
+                            <field name="latitude"/>
+                            <field name="longitude"/>
+                            <field name="warehouse_id"/>
+                            <field name="location_id"/>
+                        </group>
+                    </group>
+                    <group string="Area">
+                        <group>
+                            <field name="total_area_ha"/>
+                            <field name="total_area_acre"/>
+                        </group>
+                        <group>
+                            <field name="cultivated_area_ha"/>
+                            <field name="last_weather_id" invisible="not last_weather_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Fields Map" name="map">
+                            <field name="map_geojson" widget="mdv_agri_map" nolabel="1" readonly="1"
+                                   options="{'collection': True, 'height': 420}"/>
+                        </page>
+                        <page string="Fields" name="fields">
+                            <field name="field_ids" context="{'default_farm_id': id}">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="area_ha" sum="Total"/>
+                                    <field name="soil_type_id"/>
+                                    <field name="irrigation_type"/>
+                                    <field name="state" widget="badge" decoration-success="state == 'growing'" decoration-warning="state == 'planned'"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Notes" name="notes">
+                            <field name="notes"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_agri_farm_search" model="ir.ui.view">
+        <field name="name">mdv.agri.farm.search</field>
+        <field name="model">mdv.agri.farm</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="manager_id"/>
+                <field name="partner_id"/>
+                <filter name="archived" string="Archived" domain="[('active', '=', False)]"/>
+                <group>
+                    <filter name="group_type" string="Type" context="{'group_by': 'farm_type'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_agri_farm" model="ir.actions.act_window">
+        <field name="name">Farms</field>
+        <field name="res_model">mdv.agri.farm</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create your first farm</p>
+            <p>A farm holds fields, herds, a stock location and its own weather log.</p>
+        </field>
+    </record>
+
+    <!-- Field -->
+    <record id="view_agri_field_list" model="ir.ui.view">
+        <field name="name">mdv.agri.field.list</field>
+        <field name="model">mdv.agri.field</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="farm_id"/>
+                <field name="name"/>
+                <field name="code" optional="hide"/>
+                <field name="area_ha" sum="Total"/>
+                <field name="soil_type_id" optional="show"/>
+                <field name="soil_ph" optional="show"/>
+                <field name="irrigation_type" optional="show"/>
+                <field name="tenure" optional="hide"/>
+                <field name="current_plan_id" optional="show"/>
+                <field name="state" widget="badge" decoration-success="state == 'growing'" decoration-warning="state == 'planned'" decoration-muted="state == 'fallow'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_agri_field_kanban" model="ir.ui.view">
+        <field name="name">mdv.agri.field.kanban</field>
+        <field name="model">mdv.agri.field</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state">
+                <templates>
+                    <t t-name="card">
+                        <field name="name" class="fw-bold"/>
+                        <div class="text-muted"><field name="farm_id"/></div>
+                        <div><field name="area_ha"/> ha - <field name="soil_type_id"/></div>
+                        <div><field name="current_plan_id"/></div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_agri_field_form" model="ir.ui.view">
+        <field name="name">mdv.agri.field.form</field>
+        <field name="model">mdv.agri.field</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_use_mapped_area" type="object" string="Use Mapped Area" class="btn-secondary"
+                            invisible="not map_area_ha"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_plans" type="object" class="oe_stat_button" icon="fa-leaf" string="Crop Plans"/>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. North Field"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="farm_id"/>
+                            <field name="code"/>
+                            <field name="area_ha"/>
+                            <field name="area_acre"/>
+                            <field name="map_area_ha"/>
+                            <field name="current_plan_id"/>
+                        </group>
+                        <group>
+                            <field name="irrigation_type"/>
+                            <field name="tenure"/>
+                            <field name="lease_cost_per_season" invisible="tenure != 'leased'"/>
+                            <field name="latitude"/>
+                            <field name="longitude"/>
+                            <field name="farm_latitude" invisible="1"/>
+                            <field name="farm_longitude" invisible="1"/>
+                            <field name="company_id" invisible="1"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Map" name="map">
+                            <field name="boundary_geojson" widget="mdv_agri_map" nolabel="1"
+                                   options="{'lat_field': 'farm_latitude', 'lng_field': 'farm_longitude'}"/>
+                        </page>
+                        <page string="Soil" name="soil">
+                            <group>
+                                <group>
+                                    <field name="soil_type_id"/>
+                                    <field name="soil_ph"/>
+                                    <field name="organic_matter"/>
+                                </group>
+                                <group>
+                                    <field name="nitrogen_ppm"/>
+                                    <field name="phosphorus_ppm"/>
+                                    <field name="potassium_ppm"/>
+                                </group>
+                            </group>
+                            <field name="soil_test_ids">
+                                <list editable="bottom">
+                                    <field name="date"/>
+                                    <field name="lab_partner_id"/>
+                                    <field name="ph"/>
+                                    <field name="organic_matter"/>
+                                    <field name="nitrogen_ppm"/>
+                                    <field name="phosphorus_ppm"/>
+                                    <field name="potassium_ppm"/>
+                                    <field name="ec"/>
+                                    <field name="report_file" filename="report_filename" widget="binary"/>
+                                    <field name="report_filename" column_invisible="1"/>
+                                    <field name="note"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Crop History" name="history">
+                            <field name="plan_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="season_id"/>
+                                    <field name="crop_id"/>
+                                    <field name="area_ha"/>
+                                    <field name="yield_per_ha"/>
+                                    <field name="direct_cost"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Notes" name="notes">
+                            <field name="notes"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_agri_field_search" model="ir.ui.view">
+        <field name="name">mdv.agri.field.search</field>
+        <field name="model">mdv.agri.field</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="farm_id"/>
+                <field name="soil_type_id"/>
+                <filter name="growing" string="Growing" domain="[('state', '=', 'growing')]"/>
+                <filter name="fallow" string="Fallow" domain="[('state', '=', 'fallow')]"/>
+                <group>
+                    <filter name="group_farm" string="Farm" context="{'group_by': 'farm_id'}"/>
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_agri_field" model="ir.actions.act_window">
+        <field name="name">Fields</field>
+        <field name="res_model">mdv.agri.field</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Add your fields and plots</p>
+            <p>Draw each boundary on the map: the area in hectares is measured for you.</p>
+        </field>
+    </record>
+</odoo>
