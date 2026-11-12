@@ -151,6 +151,7 @@ class AgriActivity(models.Model):
 class AgriActivityMaterial(models.Model):
     _name = 'mdv.agri.activity.material'
     _description = 'Activity Material'
+    _inherit = ['mdv.agri.unit.mixin']
 
     activity_id = fields.Many2one('mdv.agri.activity', required=True, ondelete='cascade', index=True)
     product_id = fields.Many2one('product.product', required=True, domain=[('type', '=', 'consu')])
