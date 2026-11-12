@@ -1,3 +1,5 @@
+/** @odoo-module **/
+
 /** Farm dashboard: crops, scouting, weather alerts and livestock in one screen. */
 import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";

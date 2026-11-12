@@ -18,6 +18,7 @@
     'price': 40.0,
     'currency': 'USD',
     'depends': [
+        'web',
         'mail',
         'portal',
         'website',

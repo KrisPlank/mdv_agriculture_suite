@@ -1,3 +1,5 @@
+/** @odoo-module **/
+
 /** Field and farm map on OpenStreetMap tiles (Leaflet, no API key). */
 import { _t } from "@web/core/l10n/translation";
 import { loadCSS, loadJS } from "@web/core/assets";
