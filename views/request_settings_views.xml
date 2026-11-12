@@ -251,6 +251,11 @@
         <field name="tag">mdv_agri_dashboard</field>
     </record>
 
+    <record id="action_agri_livestock_scan" model="ir.actions.client">
+        <field name="name">Scan</field>
+        <field name="tag">mdv_agri_livestock_scan</field>
+    </record>
+
     <!-- Menus -->
     <menuitem id="menu_agri_root" name="Agriculture" web_icon="mdv_agriculture_suite,static/description/icon.png"
               sequence="45" groups="group_agri_user"/>
@@ -271,6 +276,7 @@
     <menuitem id="menu_agri_machinery" name="Machinery" parent="menu_agri_farms_top" action="action_agri_machinery" sequence="5"/>
 
     <menuitem id="menu_agri_livestock_top" name="Livestock" parent="menu_agri_root" sequence="30"/>
+    <menuitem id="menu_agri_livestock_scan" name="Scan" parent="menu_agri_livestock_top" action="action_agri_livestock_scan" sequence="0"/>
     <menuitem id="menu_agri_herd" name="Herds and Flocks" parent="menu_agri_livestock_top" action="action_agri_herd" sequence="1"/>
     <menuitem id="menu_agri_animal" name="Animals" parent="menu_agri_livestock_top" action="action_agri_animal" sequence="2"/>
     <menuitem id="menu_agri_breeding" name="Breeding" parent="menu_agri_livestock_top" action="action_agri_breeding" sequence="3"/>

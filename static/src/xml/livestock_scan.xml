@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="mdv_agriculture_suite.LivestockScan">
+        <div class="o_action h-100 d-flex justify-content-center align-items-center p-3">
+            <div class="card shadow-sm w-100" style="max-width: 32rem;">
+                <div class="card-body p-4">
+                    <h2 class="card-title text-center mb-4">Scan an Eartag</h2>
+                    <label for="o_agri_rfid_scan" class="form-label">RFID / EID</label>
+                    <input
+                        id="o_agri_rfid_scan"
+                        t-ref="rfidInput"
+                        t-model="state.rfid"
+                        t-on-keydown="onKeydown"
+                        class="form-control form-control-lg text-center"
+                        type="text"
+                        placeholder="Scan or enter an eartag"
+                        autocomplete="off"
+                        t-att-disabled="state.searching"
+                    />
+                    <div t-if="state.searching" class="text-center text-muted mt-3" role="status">
+                        Searching...
+                    </div>
+                </div>
+            </div>
+            <div
+                t-if="state.noMatch"
+                class="modal d-block"
+                tabindex="-1"
+                role="dialog"
+                aria-modal="true"
+                style="background-color: rgba(0, 0, 0, 0.4);"
+            >
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 class="modal-title fs-5">No matching animals found</h3>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-primary" t-on-click="createAnimal">
+                                Create a new animal
+                            </button>
+                            <button class="btn btn-secondary" t-on-click="rescan">
+                                Rescan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>
