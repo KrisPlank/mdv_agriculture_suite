@@ -7,7 +7,7 @@ SEVERITY = [('low', 'Low'), ('medium', 'Medium'), ('high', 'High'), ('critical',
 class AgriScouting(models.Model):
     _name = 'mdv.agri.scouting'
     _description = 'Crop Scouting'
-    _inherit = ['mail.thread', 'mail.activity.mixin']
+    _inherit = ['mail.thread', 'mail.activity.mixin', 'mdv.agri.unit.mixin']
     _order = 'date desc, id desc'
     _check_company_auto = True
 
