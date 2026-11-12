@@ -8,7 +8,7 @@
                    'field activities that use stock, labour and machinery, a job cost sheet with budget versus '
                    'actual, crop scouting, Open-Meteo weather with alerts, harvest lots sold through sales orders, '
                    'dairy cattle, poultry flocks, goats and sheep, and a crop request portal.',
-    'version': '19.0.1.0.0',
+    'version': '19.0.1.0.1',
     'category': 'Industries',
     'author': 'Modvanta',
     'maintainer': 'Modvanta',
@@ -51,7 +51,9 @@
     ],
     'assets': {
         'web.assets_backend': [
-            'mdv_agriculture_suite/static/src/js/*.js',
+            'mdv_agriculture_suite/static/src/js/dashboard.js',
+            'mdv_agriculture_suite/static/src/js/map_field.js',
+            'mdv_agriculture_suite/static/src/js/livestock_scan.js',
             'mdv_agriculture_suite/static/src/xml/*.xml',
             'mdv_agriculture_suite/static/src/scss/*.scss',
         ],
